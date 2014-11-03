@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="vertical"
+android:padding="10dip">
+
+        <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="30dp"
+        android:text="Register your account"
+        android:layout_gravity="center"
+        android:textSize="28sp" />
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Enter the activation code sent to the entered phone number."/>
+
+    <EditText
+        android:id="@+id/activationCodeTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="phone"
+        android:paddingBottom="30dp" >
+
+        <requestFocus />
+    </EditText>
+    
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="30dp"
+            android:text="Enter your name:" />
+
+    <EditText
+        android:id="@+id/nicknameTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10" >
+    </EditText>
+
+    <Button
+        android:id="@+id/submitNumberBtn"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dip"
+        android:text="Get Started" />
+        
+    </LinearLayout>
+    
+
+</ScrollView>
