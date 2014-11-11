@@ -3,11 +3,11 @@ package com.gilad.oved.telme;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.renderscript.Type;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -78,10 +78,45 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
         if (convertView == null) {
             LayoutInflater inf = (LayoutInflater) context
                     .getSystemService(context.LAYOUT_INFLATER_SERVICE);
-            convertView = inf.inflate(R.layout.group_item, null);
+                convertView = inf.inflate(R.layout.group_item, null);
         }
-        TextView tv = (TextView) convertView.findViewById(R.id.group_name);
-        tv.setText(group.getName());
+        
+        ImageView contactImage = (ImageView) convertView
+				.findViewById(R.id.contactImage);
+		contactImage.setImageResource(R.drawable.bae);
+
+		TextView contactName = (TextView) convertView
+				.findViewById(R.id.contactNameLbl);
+		contactName.setText(group.getName());
+
+		TextView contactNumber = (TextView) convertView
+				.findViewById(R.id.contactNumberLbl);
+		contactNumber.setText(group.getNumber());
+        
+		/*if (groupPosition == 0) {
+			ImageButton messageBtn = (ImageButton) convertView
+					.findViewById(R.id.contactBtn);
+			messageBtn.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					System.out.println("wants to talk ;)");
+				}
+			});
+			messageBtn.setFocusable(false);
+
+			ImageView contactImage = (ImageView) convertView
+					.findViewById(R.id.contactImage);
+			contactImage.setImageResource(R.drawable.bae);
+
+			TextView contactName = (TextView) convertView
+					.findViewById(R.id.contactNameLbl);
+			contactName.setText("Alexa Bae");
+
+			TextView contactNumber = (TextView) convertView
+					.findViewById(R.id.contactNumberLbl);
+			contactNumber.setText("781-555-1903");
+		}*/
+        
         return convertView;
     }
 

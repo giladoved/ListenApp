@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class Group {
 	
 	private String Name;
+	private String Number;
     private ArrayList<Child> Items;
 
     public String getName() {
@@ -13,6 +14,14 @@ public class Group {
 
     public void setName(String name) {
         this.Name = name;
+    }
+    
+    public String getNumber() {
+        return Number;
+    }
+
+    public void setNumber(String number) {
+        this.Number = number;
     }
 
     public ArrayList<Child> getItems() {

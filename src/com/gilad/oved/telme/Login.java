@@ -6,10 +6,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -17,18 +20,16 @@ import android.widget.Toast;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.parse.Parse;
-import com.parse.ParseAnalytics;
 import com.parse.ParseInstallation;
 import com.parse.ParsePush;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.parse.PushService;
 
 public class Login extends Activity implements OnClickListener {
 	
 	Button nextBtn;
 	EditText phoneNumberTxt;
+	Handler handler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +39,28 @@ public class Login extends Activity implements OnClickListener {
 		nextBtn = (Button) findViewById(R.id.nextNumberBtn);
 		phoneNumberTxt = (EditText) findViewById(R.id.phoneNumberTxt);
 		
-		if (ParseUser.getCurrentUser() != null) {
-			Intent intent = new Intent(Login.this, MainActivity.class);
-			Login.this.startActivity(intent);
-		}
+		handler = new Handler(new Handler.Callback() {
+		    @Override
+		    public boolean handleMessage(Message msg) {
+		        switch (msg.what) {
+		            case 1:
+		        		Intent intent = new Intent(Login.this, MainActivity.class);
+		        		Login.this.startActivity(intent);
+		            default:
+		                break;
+		        }
+		        return false;
+		    }
+		});
 		
 		nextBtn.setOnClickListener(this);
+	}
+
+	public void onPostResume() {
+		super.onPostResume();
+		if (ParseUser.getCurrentUser() != null) {
+			handler.sendEmptyMessageDelayed(1, 1000);
+		}
 	}
 
 	@Override
