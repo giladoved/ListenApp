@@ -69,9 +69,10 @@ public class Login extends Activity implements OnClickListener {
 	
 	public void sendCodeTo(String number) {
 		try {
+			System.out.println("sending message to: " + number);
 			ParseQuery pushQuery = ParseInstallation.getQuery();
 			ParsePush push = new ParsePush();
-			push.setChannel(ParseInstallation.getCurrentInstallation().getInstallationId());
+			push.setChannel("Gilad" + ParseInstallation.getCurrentInstallation().getInstallationId());
 			push.setQuery(pushQuery); // Set our Installation query
 			push.setMessage("Your activation code to register for talkit is 47303");
 			push.sendInBackground();
@@ -118,7 +119,7 @@ public class Login extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View v) {
 		String number = phoneNumberTxt.getText().toString();
-		PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+		/*PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 		PhoneNumber numberProto = null;
 		try {
 			System.out.println("found locale is --- " + Locale.getDefault().getCountry());
@@ -127,16 +128,16 @@ public class Login extends Activity implements OnClickListener {
 		  System.err.println("NumberParseException was thrown: " + e.toString());
 		}
 		
-		if (phoneUtil.isValidNumber(numberProto)) {
+		if (phoneUtil.isValidNumber(numberProto)) {*/
 			//Parse.push
 			sendCodeTo(number);
-		} else {
+		/*} else {
 			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
 					this);
 			AlertDialog dialog = alertDialogBuilder.create();
 			dialog.setMessage("Please enter a valid phone number");
 			dialog.show();
-		}
+		}*/
 	}
 
 }
