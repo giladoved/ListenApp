@@ -3,11 +3,12 @@ package com.gilad.oved.telme;
 import java.util.ArrayList;
 
 import android.content.Context;
-import android.renderscript.Type;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -81,6 +82,16 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                 convertView = inf.inflate(R.layout.group_item, null);
         }
         
+        ImageButton messageBtn = (ImageButton) convertView
+				.findViewById(R.id.contactBtn);
+		messageBtn.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				System.out.println("wants to talk ;)");
+			}
+		});
+		messageBtn.setFocusable(false);
+        
         ImageView contactImage = (ImageView) convertView
 				.findViewById(R.id.contactImage);
 		contactImage.setImageResource(R.drawable.bae);
@@ -92,30 +103,6 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 		TextView contactNumber = (TextView) convertView
 				.findViewById(R.id.contactNumberLbl);
 		contactNumber.setText(group.getNumber());
-        
-		/*if (groupPosition == 0) {
-			ImageButton messageBtn = (ImageButton) convertView
-					.findViewById(R.id.contactBtn);
-			messageBtn.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					System.out.println("wants to talk ;)");
-				}
-			});
-			messageBtn.setFocusable(false);
-
-			ImageView contactImage = (ImageView) convertView
-					.findViewById(R.id.contactImage);
-			contactImage.setImageResource(R.drawable.bae);
-
-			TextView contactName = (TextView) convertView
-					.findViewById(R.id.contactNameLbl);
-			contactName.setText("Alexa Bae");
-
-			TextView contactNumber = (TextView) convertView
-					.findViewById(R.id.contactNumberLbl);
-			contactNumber.setText("781-555-1903");
-		}*/
         
         return convertView;
     }

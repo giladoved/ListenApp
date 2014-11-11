@@ -66,6 +66,8 @@ public class MainActivity extends Activity {
                 			}
                 			System.out.println("friendNames is : " + friendNicknames.toString());
                 		}
+            		} else {
+            			System.out.println("not going through with skrillex::::: " + friendNicknames);
             		}
             	}
             } else {
@@ -97,10 +99,10 @@ public class MainActivity extends Activity {
 					.setPositiveButton("OK",
 					  new DialogInterface.OnClickListener() {
 					    public void onClick(DialogInterface dialog,int id) {
-					    	if (!friendNumbers.contains(userInput.getText().toString().trim())) {
+					    	String input = userInput.getText().toString().trim();
+					    	if (!friendNumbers.contains(input)) {
 					    	ParseQuery<ParseUser> query = ParseUser.getQuery();
 					    	query.whereEqualTo("username", userInput.getText().toString().trim());
-					    	query.whereNotEqualTo("username", ParseUser.getCurrentUser().getString("username"));	
 					    	query.getFirstInBackground(new GetCallback<ParseUser>() {
 					    	  public void done(ParseUser user, ParseException e) {
 					    	    if (user == null) {
