@@ -1,5 +1,6 @@
 package com.gilad.oved.telme;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +10,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.media.AudioManager;
+import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +25,7 @@ import android.widget.Toast;
 
 import com.parse.GetCallback;
 import com.parse.ParseException;
+import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -36,6 +41,10 @@ public class MainActivity extends Activity {
     
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;
+    
+	public static final String PREFS_NAME = "MyPrefsFile";
+    private static MediaRecorder myAudioRecorder;
+	public static String outputFile = null;
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +55,10 @@ public class MainActivity extends Activity {
         friendNumbers = new ArrayList<String>();
         
 		ExpandList = (ExpandableListView) findViewById(R.id.list);
+		
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		outputFile = Environment.getExternalStorageDirectory()
+				.getAbsolutePath() + "/myrecording.3gp";
                 
         ParseQuery<ParseUser> query = ParseUser.getQuery();
         query.getInBackground(ParseUser.getCurrentUser().getObjectId(), new GetCallback<ParseUser>() {
@@ -100,9 +113,10 @@ public class MainActivity extends Activity {
 					  new DialogInterface.OnClickListener() {
 					    public void onClick(DialogInterface dialog,int id) {
 					    	String input = userInput.getText().toString().trim();
+					    	System.out.println("intput is : " + input);
 					    	if (!friendNumbers.contains(input)) {
 					    	ParseQuery<ParseUser> query = ParseUser.getQuery();
-					    	query.whereEqualTo("username", userInput.getText().toString().trim());
+					    	query.whereEqualTo("username", input);
 					    	query.getFirstInBackground(new GetCallback<ParseUser>() {
 					    	  public void done(ParseUser user, ParseException e) {
 					    	    if (user == null) {
@@ -147,7 +161,38 @@ public class MainActivity extends Activity {
 			}
 		});
 	}
-	
+    
+    @Override
+	public void onBackPressed() {
+	}
+    
+    public static void start() {
+		myAudioRecorder = new MediaRecorder();
+		myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+		myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+		myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+		myAudioRecorder.setOutputFile(outputFile);
+		try {
+			myAudioRecorder.prepare();
+			myAudioRecorder.start();
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void stop() {
+		try {
+			myAudioRecorder.stop();
+		} catch (IllegalStateException e) {
+			System.out.println("E is: ----- " + e.getLocalizedMessage());
+		}
+		myAudioRecorder.reset();
+		myAudioRecorder.release();
+		myAudioRecorder = null;
+	}
+    
 	public ArrayList<Group> SetStandardGroups() {
         String country_names[] = { "Brazil", "Mexico", "Croatia", "Cameroon",
                 "Netherlands", "chile", "Spain", "Australia", "Colombia",

@@ -16,6 +16,7 @@ import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseInstallation;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 import com.parse.SignUpCallback;
 
 public class Register extends Activity {
@@ -65,8 +66,8 @@ public class Register extends Activity {
 						if (e == null) {
 							ParseInstallation installation = ParseInstallation
 									.getCurrentInstallation();
-							installation.put("user", ParseUser.getCurrentUser());
-							installation.put("username", ParseUser.getCurrentUser().getUsername());
+							installation.put("user",ParseUser.getCurrentUser());
+							installation.put("username",number);
 							installation.saveInBackground();
 							
 							Toast.makeText(getApplicationContext(), "All set and ready to go!", Toast.LENGTH_LONG).show();
