@@ -1,8 +1,9 @@
 package com.gilad.oved.telme;
 
 public class Child {
-	 private String Name;
+	 	private String Name;
 	    private int Image;
+	    
 
 	    public String getName() {
 	        return Name;
