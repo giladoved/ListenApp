@@ -2,11 +2,29 @@ package com.gilad.oved.telme;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import android.content.Context;
+import android.util.Base64;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.BaseExpandableListAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -18,27 +36,12 @@ import com.parse.ParseUser;
 import com.parse.SaveCallback;
 import com.parse.SendCallback;
 
-import android.content.Context;
-import android.media.MediaRecorder;
-import android.os.Environment;
-import android.util.Base64;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
-import android.view.ViewGroup;
-import android.widget.BaseExpandableListAdapter;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
-
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
     private Context context;
     private ArrayList<Group> groups;
     
 	boolean firstTouch = true;
+	ListView historyList;
 
     public ExpandableListAdapter(Context context, ArrayList<Group> groups) {
         this.context = context;
@@ -66,11 +69,40 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                     .getSystemService(context.LAYOUT_INFLATER_SERVICE);
             convertView = infalInflater.inflate(R.layout.child_item, null);
         }
-        TextView tv = (TextView) convertView.findViewById(R.id.country_name);
-        ImageView iv = (ImageView) convertView.findViewById(R.id.flag);
+        
+		Button removeContactBtn = (Button) convertView
+				.findViewById(R.id.removeContactBtn);
+		removeContactBtn.setOnClickListener(new OnClickListener() {
 
-        tv.setText(child.getName().toString());
-        iv.setImageResource(child.getImage());
+			@Override
+			public void onClick(View v) {
+				Toast.makeText(context, "remove this contact!!!", Toast.LENGTH_SHORT).show();
+			}
+		});
+		
+		Button clearHistoryBtn = (Button) convertView
+				.findViewById(R.id.clearHistoryBtn);
+		clearHistoryBtn.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				Toast.makeText(context, "Clear History!!!", Toast.LENGTH_SHORT).show();
+			}
+		});
+        
+		System.out.println("child is :" + child);
+		
+		historyList = (ListView) convertView.findViewById(R.id.historyListView);
+		final SimpleArrayAdapter adapter = new SimpleArrayAdapter(context, android.R.layout.simple_list_item_1, child.getList());
+		historyList.setAdapter(adapter);
+		historyList.setOnTouchListener(new OnTouchListener() {
+		    @Override
+		    public boolean onTouch(View v, MotionEvent event) {
+		        // disallow the onTouch for your scrollable parent view 
+		        v.getParent().requestDisallowInterceptTouchEvent(true);
+		        return false;
+		    }
+		});
 
         return convertView;
     }
@@ -255,5 +287,34 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     public boolean isChildSelectable(int groupPosition, int childPosition) {
         return true;
     }
+    
+    
+    
+    
+    private class SimpleArrayAdapter extends ArrayAdapter<String> {
+
+        HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
+
+        public SimpleArrayAdapter(Context context, int textViewResourceId,
+            List<String> objects) {
+          super(context, textViewResourceId, objects);
+          for (int i = 0; i < objects.size(); ++i) {
+            mIdMap.put(objects.get(i), i);
+          }
+        }
+
+        @Override
+        public long getItemId(int position) {
+          String item = getItem(position);
+          return mIdMap.get(item);
+        }
+
+        @Override
+        public boolean hasStableIds() {
+          return true;
+        }
+
+      }
+
 
 }

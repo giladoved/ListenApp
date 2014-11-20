@@ -2,10 +2,9 @@
 <resources>
 
     <string name="app_name">TelMe</string>
-    <string name="title_activity_login">Login</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="title_activity_login">TelMe</string>
+    <string name="action_settings">TelMe</string>
     <string name="title_activity_register">Register</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main">TelMe</string>
 
 </resources>

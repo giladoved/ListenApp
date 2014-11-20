@@ -1,23 +1,16 @@
 package com.gilad.oved.telme;
 
+import java.util.ArrayList;
+
 public class Child {
-	 	private String Name;
-	    private int Image;
-	    
+    	private ArrayList<String> list;
 
-	    public String getName() {
-	        return Name;
+	    public ArrayList<String> getList() {
+	        return list;
 	    }
 
-	    public void setName(String Name) {
-	        this.Name = Name;
+	    public void setList(ArrayList<String> childListDemo) {
+	        this.list = childListDemo;
 	    }
 
-	    public int getImage() {
-	        return Image;
-	    }
-
-	    public void setImage(int Image) {
-	        this.Image = Image;
-	    }
 	}

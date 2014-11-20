@@ -7,12 +7,26 @@
     android:orientation="vertical"
     tools:context=".MainActivity" >
     
-    <Button
+ <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+        
+            <Button
         android:id="@+id/addBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Add Contact"
         android:padding="20dp" />
+
+        <Button
+        android:id="@+id/editProfile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:text="Edit Profile"
+        android:padding="20dp" />
+
+    </RelativeLayout>
 
     <ExpandableListView
         android:id="@+id/list"

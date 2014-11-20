@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -21,15 +19,13 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.parse.GetCallback;
 import com.parse.ParseException;
-import com.parse.ParseInstallation;
-import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.parse.ParseFacebookUtils.Permissions.Friends;
 
 public class MainActivity extends Activity {
 	
@@ -38,6 +34,7 @@ public class MainActivity extends Activity {
     ExpandableListView ExpandList;
     
     Button addBtn;
+    Button editProfileBtn;
     
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;
@@ -86,6 +83,7 @@ public class MainActivity extends Activity {
             } else {
             	System.out.println("Error: " + e);
             }
+    	    
             ExpListItems = SetStandardGroups();
             ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems);
             ExpandList.setAdapter(ExpAdapter);
@@ -160,6 +158,16 @@ public class MainActivity extends Activity {
 				alertDialogBuilder.create().show();
 			}
 		});
+        
+        editProfileBtn = (Button) findViewById(R.id.editProfile);
+        editProfileBtn.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				System.out.println("edit da profile");
+			}
+		});
+        
 	}
     
     @Override
@@ -201,26 +209,13 @@ public class MainActivity extends Activity {
                 "Honduras", "Agrentina", "Nigeria", "Bosnia and Herzegovina",
                 "Iran", "Germany", "United States", "Portugal", "Ghana",
                 "Belgium", "Algeria", "Russia", "Korea Republic" };
-
-        int Images[] = { R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher, R.drawable.ic_launcher, R.drawable.ic_launcher,
-                R.drawable.ic_launcher };
-
-        ArrayList<Group> list = new ArrayList<Group>();
+        final ArrayList<String> childListDemo = new ArrayList<String>();
+        for (int i = 0; i < country_names.length; ++i) {
+          childListDemo.add(country_names[i]);
+        }
 
         ArrayList<Child> ch_list;
-
-        int size = 4;
-        int j = 0;
+        ArrayList<Group> list = new ArrayList<Group>();
         int counter = 0;
         
         for (String group_name : friendNicknames) {
@@ -229,16 +224,12 @@ public class MainActivity extends Activity {
             gru.setNumber(friendNumbers.get(counter));
             
             ch_list = new ArrayList<Child>();
-            for (; j < size; j++) {
-                Child ch = new Child();
-                ch.setName(country_names[j]);
-                ch.setImage(Images[j]);
-                ch_list.add(ch);
-            }
+            Child ch = new Child();
+            ch.setList(childListDemo);
+            ch_list.add(ch);
             gru.setItems(ch_list);
-            list.add(gru);
 
-            size = size + 4;
+            list.add(gru);
             counter++;
         }
 
