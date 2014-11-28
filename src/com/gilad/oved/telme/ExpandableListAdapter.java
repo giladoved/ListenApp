@@ -2,6 +2,7 @@ package com.gilad.oved.telme;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,7 +10,11 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.ExpandableListActivity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -20,12 +25,14 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseInstallation;
@@ -42,10 +49,18 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     
 	boolean firstTouch = true;
 	ListView historyList;
+		
+    ArrayList<String> friendNicknames;
+    ArrayList<String> friendNumbers;
+    ArrayList<ParseFile> friendPictures;
 
-    public ExpandableListAdapter(Context context, ArrayList<Group> groups) {
+    public ExpandableListAdapter(Context context, ArrayList<Group> groups, ArrayList<String> nicknames, ArrayList<String> numbers, ArrayList<ParseFile> pictures, ExpandableListView listView) {
         this.context = context;
         this.groups = groups;
+        
+        friendNicknames = nicknames;
+        friendNumbers = numbers;
+        friendPictures = pictures;
     }
 
     @Override
@@ -60,7 +75,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     }
 
     @Override
-    public View getChildView(int groupPosition, int childPosition,
+    public View getChildView(final int groupPosition, int childPosition,
             boolean isLastChild, View convertView, ViewGroup parent) {
 
         Child child = (Child) getChild(groupPosition, childPosition);
@@ -76,7 +91,22 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 			@Override
 			public void onClick(View v) {
-				Toast.makeText(context, "remove this contact!!!", Toast.LENGTH_SHORT).show();
+			    friendNicknames.remove(groupPosition);
+			   	friendNumbers.remove(groupPosition);
+			   	
+			   	ParseQuery<ParseUser> query = ParseUser.getQuery();
+        		query.getInBackground(ParseUser.getCurrentUser().getObjectId(), new GetCallback<ParseUser>() {
+        			public void done(ParseUser foundUser, ParseException e) {
+        				if (e == null) {
+        					foundUser.put("friendsNames", friendNicknames);
+        					foundUser.put("friendsNumbers", friendNumbers);
+        					foundUser.saveInBackground();
+        					
+        					groups.remove(groupPosition);
+        					notifyDataSetChanged();
+        				}
+        			}
+        		});
 			}
 		});
 		
@@ -137,10 +167,10 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                     .getSystemService(context.LAYOUT_INFLATER_SERVICE);
                 convertView = inf.inflate(R.layout.group_item, null);
         }
-        
-        ImageView contactImage = (ImageView) convertView
+
+		ImageView contactImage = (ImageView) convertView
 				.findViewById(R.id.contactImage);
-		contactImage.setImageResource(R.drawable.bae);
+		contactImage.setImageBitmap(group.getPicture());
 
 		TextView contactName = (TextView) convertView
 				.findViewById(R.id.contactNameLbl);
