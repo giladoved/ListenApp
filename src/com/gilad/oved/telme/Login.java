@@ -70,10 +70,8 @@ public class Login extends Activity implements OnClickListener {
 	public void sendCodeTo(String number) {
 		try {
 			System.out.println("sending message to: " + number);
-			ParseQuery pushQuery = ParseInstallation.getQuery();
 			ParsePush push = new ParsePush();
 			push.setChannel("Gilad" + ParseInstallation.getCurrentInstallation().getInstallationId());
-			push.setQuery(pushQuery); // Set our Installation query
 			push.setMessage("47303 - your activation code to register for talkit");
 			push.sendInBackground();
 			

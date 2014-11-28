@@ -1,5 +1,7 @@
 package com.gilad.oved.telme;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -7,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import android.app.Activity;
@@ -31,13 +32,12 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
-import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
-import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 public class MainActivity extends Activity {
 	
@@ -50,7 +50,6 @@ public class MainActivity extends Activity {
     
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;    
-    ArrayList<ParseFile> friendPictures;
     
     ArrayList<ArrayList<String>> history;
 
@@ -67,7 +66,6 @@ public class MainActivity extends Activity {
         
         friendNicknames = new ArrayList<String>();
         friendNumbers = new ArrayList<String>();
-        friendPictures = new ArrayList<ParseFile>();
         history = new ArrayList<ArrayList<String>>();
         
 		ExpandList = (ExpandableListView) findViewById(R.id.list);
@@ -76,15 +74,16 @@ public class MainActivity extends Activity {
 		outputFile = Environment.getExternalStorageDirectory()
 				.getAbsolutePath() + "/myrecording.3gp";
 		
-		
         ParseQuery<ParseUser> query = ParseUser.getQuery();
         query.getInBackground(ParseUser.getCurrentUser().getObjectId(), new GetCallback<ParseUser>() {
           public void done(ParseUser user, ParseException e) {
             if (e == null) {
             	if (user != null) {
             		List<Object> foundFriendsNums = user.getList("friendsNumbers");
+            		
             		System.out.println("found numbers is actually skrillex: : :: : " + foundFriendsNums);
             		if (foundFriendsNums != null) {
+            			
             			for (Object obj : foundFriendsNums) {
             				friendNumbers.add(obj != null ? obj.toString() : null);
             			}
@@ -94,22 +93,7 @@ public class MainActivity extends Activity {
                 			for (Object obj : foundFriendsNames) {
                 				friendNicknames.add(obj != null ? obj.toString() : null);
                 			}
-                			System.out.println("friendNames is : " + friendNicknames.toString());
-                			/*List<Object> foundFriendsPictures = user.getList("friendsPictures");
-                			if (foundFriendsPictures != null) {
-                				for (Object obj : foundFriendsPictures) {
-                					ParseFile parseFile = (ParseFile) obj;
-  					    	      	byte[] data;
-  					    	      	Bitmap bmp;
-  					    	      	try {
-  					    	      		data = parseFile.getData();
-  					    	      		bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-  	                					friendPictures.add(parseFile);
-  					    	      	} catch (ParseException e1) {
-  					    	      		e1.printStackTrace();
-  					    	      	}
-                				}
-                			}*/
+                			System.out.println("friendNames is : " + friendNicknames.toString()); 		
                 		}
             		} else {
             			System.out.println("not going through with skrillex::::: " + friendNicknames);
@@ -120,7 +104,7 @@ public class MainActivity extends Activity {
             }
     	    
             ExpListItems = SetStandardGroups();
-            ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, friendPictures, ExpandList);
+            ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
             ExpandList.setAdapter(ExpAdapter);
           }
         });
@@ -159,30 +143,7 @@ public class MainActivity extends Activity {
 
 					    	      friendNumbers.add(user.getUsername());
 					    	      friendNicknames.add(user.getString("nickname"));
-					    	      /*ParseFile parseFile = user.getParseFile("profilepic");
-					    	      byte[] data;
-					    	      Bitmap bmp;
-					    	   	  try {
-							   	      if (parseFile != null) {
-							   	    	  data = parseFile.getData();
-						        		  bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-						   	    		  friendPictures.add(parseFile);
-							   	      } else {
-							   	    	  bmp = BitmapFactory.decodeResource(context.getResources(),
-		                                           R.drawable.bae);
-							   	    	  int bytes = (int)getSizeInBytes(bmp);
-							   	    	  ByteBuffer buffer = ByteBuffer.allocate(bytes); 
-							   	    	  bmp.copyPixelsToBuffer(buffer); 
-							   	    	  byte[] array = buffer.array();
-							   	    	  parseFile = new ParseFile(array);
-							   	    	  data = parseFile.getData();
-						        		  bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-						   	    		  friendPictures.add(parseFile);
-							   	      }
-					   	    	  } catch (ParseException e1) {
-					   	    		  e.printStackTrace();
-				    	    	  }*/
-					    	   	  
+					    	      
 		    	            		//update currrent user friend list on parse
 		    	            		ParseQuery<ParseUser> query = ParseUser.getQuery();
 		    	            		query.getInBackground(ParseUser.getCurrentUser().getObjectId(), new GetCallback<ParseUser>() {
@@ -190,14 +151,11 @@ public class MainActivity extends Activity {
 		    	            				if (e == null) {
 		    	            					foundUser.put("friendsNames", friendNicknames);
 		    	            					foundUser.put("friendsNumbers", friendNumbers);
-		    	            					//System.out.println("friend pictures ssss: " + friendPictures);
-		    	            					//foundUser.put("friendsPictures", friendPictures);
 		    	            					foundUser.saveInBackground();
 		    	            					System.out.println("nigga we made it..." + friendNumbers.toString());
 		    	            					System.out.println("bithc pelease: " + friendNicknames.toString());
-		    	            					//System.out.println("yeahhhh pelease: " + friendPictures.toString());
 		    	            			        ExpListItems = SetStandardGroups();
-		    	            			        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, friendPictures, ExpandList);
+		    	            			        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
 		    	            			        ExpandList.setAdapter(ExpAdapter);
 		    	            			        ExpAdapter.notifyDataSetChanged();
 		    	            				}
@@ -229,7 +187,7 @@ public class MainActivity extends Activity {
 				photoPickerIntent.setType("image/*");
 				startActivityForResult(photoPickerIntent, SELECT_PHOTO); 
 			}
-		});
+		}); 
         
 	}
     
@@ -285,33 +243,7 @@ public class MainActivity extends Activity {
 				} catch (FileNotFoundException e1) {
 					e1.printStackTrace();
 				}
-                int bytes = (int)getSizeInBytes(selectedImage);
-                ByteBuffer buffer = ByteBuffer.allocate(bytes); 
-                selectedImage.copyPixelsToBuffer(buffer); 
-                byte[] array = buffer.array();
-                ParseFile imageDataFile = new ParseFile(array);
-                ParseUser.getCurrentUser().put("profilepic", imageDataFile);
-                ParseUser.getCurrentUser().saveInBackground();
-				Toast.makeText(getApplicationContext(), "Edit the profile", Toast.LENGTH_SHORT).show();
-				
-				FileOutputStream out = null;
-				try {
-					String path = Environment.getExternalStorageDirectory().toString();
-					File filename = new File(path, "profilepic.jpg"); // the File to save to
-				    out = new FileOutputStream(filename);
-				    selectedImage.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-				    // PNG is a lossless format, the compression factor (100) is ignored
-				} catch (Exception e) {
-				    e.printStackTrace();
-				} finally {
-				    try {
-				        if (out != null) {
-				            out.close();
-				        }
-				    } catch (IOException e) {
-				        e.printStackTrace();
-				    }
-				}
+	    	      
             }
         }
     }
@@ -364,33 +296,21 @@ public class MainActivity extends Activity {
         ArrayList<Group> list = new ArrayList<Group>();
         int counter = 0;
         
-        for (String group_name : friendNicknames) {
-            Group gru = new Group();
-            gru.setName(group_name);
-            gru.setNumber(friendNumbers.get(counter));
-            
-            ParseFile parseFile = friendPictures.get(counter);
-  	      	byte[] data;
-  	      	Bitmap bmp;
-  	      	try {
-  	      		data = parseFile.getData();
-  	      		bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-					friendPictures.add(parseFile);
-		        gru.setPicture(bmp);
-  	      	} catch (ParseException e1) {
-  	      		e1.printStackTrace();
-  	      	}
-            
-            ch_list = new ArrayList<Child>();
-            Child ch = new Child();
-            ch.setList(childListDemo);
-            ch_list.add(ch);
-            gru.setItems(ch_list);
+		for (String group_name : friendNicknames) {
+			Group gru = new Group();
+			gru.setName(group_name);
+			gru.setNumber(friendNumbers.get(counter));
+			
+			ch_list = new ArrayList<Child>();
+			Child ch = new Child();
+			ch.setList(childListDemo);
+			ch_list.add(ch);
+			gru.setItems(ch_list);
 
-            list.add(gru);
-            counter++;
-        }
+			list.add(gru);
+			counter++;
+		}
 
-        return list;
-    }
+		return list;
+	}
 }

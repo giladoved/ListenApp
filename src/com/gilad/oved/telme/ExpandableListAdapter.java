@@ -52,15 +52,13 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 		
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;
-    ArrayList<ParseFile> friendPictures;
 
-    public ExpandableListAdapter(Context context, ArrayList<Group> groups, ArrayList<String> nicknames, ArrayList<String> numbers, ArrayList<ParseFile> pictures, ExpandableListView listView) {
+    public ExpandableListAdapter(Context context, ArrayList<Group> groups, ArrayList<String> nicknames, ArrayList<String> numbers, ExpandableListView listView) {
         this.context = context;
         this.groups = groups;
         
         friendNicknames = nicknames;
         friendNumbers = numbers;
-        friendPictures = pictures;
     }
 
     @Override
@@ -168,9 +166,8 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                 convertView = inf.inflate(R.layout.group_item, null);
         }
 
-		ImageView contactImage = (ImageView) convertView
-				.findViewById(R.id.contactImage);
-		contactImage.setImageBitmap(group.getPicture());
+		//ImageView contactImage = (ImageView) convertView
+		//		.findViewById(R.id.contactImage);
 
 		TextView contactName = (TextView) convertView
 				.findViewById(R.id.contactNameLbl);

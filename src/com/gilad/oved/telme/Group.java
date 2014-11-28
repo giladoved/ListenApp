@@ -8,7 +8,6 @@ public class Group {
 	
 	private String Name;
 	private String Number;
-	private Bitmap Picture;
     private ArrayList<Child> Items;
 
     public String getName() {
@@ -25,14 +24,6 @@ public class Group {
 
     public void setNumber(String number) {
         this.Number = number;
-    }
-    
-    public Bitmap getPicture() {
-    	return Picture;
-    }
-    
-    public void setPicture(Bitmap picture) {
-    	this.Picture = picture;
     }
 
     public ArrayList<Child> getItems() {
