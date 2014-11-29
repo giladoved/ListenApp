@@ -18,6 +18,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.parse.FindCallback;
 import com.parse.ParseException;
@@ -32,13 +33,8 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 	byte[] data;
 	
 	@Override
-    public void onPushOpen(final Context context, Intent intent) {
-        Log.e("Push", "Clicked");
-        Intent i = new Intent(context, MainActivity.class);
-        i.putExtras(intent.getExtras());
-        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(i);
-        
+    public void onPushOpen(final Context context, final Intent intent) {
+        Log.e("Push", "Clicked!!!!");
         try {
 			if (intent == null)
 			{
@@ -48,12 +44,15 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 			{   
 				MediaPlayer mp = MediaPlayer.create(context, R.raw.ding);
 			    mp.start();
+			    
+		        Intent i = new Intent(context, MainActivity.class);
+		        i.putExtras(intent.getExtras());
+		        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		        context.startActivity(i);
 				
 				System.out.println("RECEIVED A MESSAGE!!");
 				String action = intent.getAction();
 				System.out.println("got action " + action);
-				if (action.equals("com.gilad.oved.holdandtalk.PLAY_MESSAGE"))
-				{
 					String channel = intent.getExtras().getString("com.parse.Channel");
 					JSONObject json = new JSONObject(intent.getExtras().getString("com.parse.Data"));
 
@@ -70,9 +69,8 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 						else if (key.equals("from")) {
 						      fromUsername = json.getString("from");
 						}
-						Log.d("nice", "..." + key + " => " + json.getString(key));
+						Log.d("nice", "..." + key + " = > " + json.getString(key));
 					}
-					
 					
 					ParseQuery<ParseObject> query = ParseQuery.getQuery("messageData");
 				    query.whereEqualTo("username", fromUsername);
@@ -81,6 +79,7 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 				    query.findInBackground(new FindCallback<ParseObject>() {
 				        @Override
 						public void done(List<ParseObject> results, ParseException e) {
+						    Toast.makeText(context, "okay we're doing just fine " + e, Toast.LENGTH_SHORT).show();
 				            if (e == null) {
 				            	ParseObject foundVoice = results.get(0);
 				            	System.out.println("foundVoice" + foundVoice);
@@ -89,7 +88,7 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 				            	try {
 									data = f.getData();
 								    System.out.println("we made it " + data);
-								    playSoundData(data, context);
+								    playSoundData(data, context);		    
 								} catch (ParseException e1) {
 									e1.printStackTrace();
 								}
@@ -98,7 +97,6 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 				            }
 				        }
 				    });
-				}
 			}
 
 		} catch (JSONException e) {
