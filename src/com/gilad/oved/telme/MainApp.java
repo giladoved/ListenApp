@@ -15,11 +15,10 @@ public class MainApp extends Application {
 	public void onCreate() {
 		super.onCreate();
 		Parse.initialize(this, "fXhQsK4oV7zU1VIoJhzHiJzLn28V76x49eZUo16P", "mXhGveWxk6Leo0ZiU1gEu9mR86GFrcEGAMoMZ4GU");
-		ParseInstallation.getCurrentInstallation().saveInBackground();
 		ParsePush.subscribeInBackground("Gilad" + ParseInstallation.getCurrentInstallation().getInstallationId(), new SaveCallback() {
 			  @Override
 			  public void done(ParseException e) {
-			    if (e != null) {
+			    if (e == null) {
 			    	System.out.println("funziona!");
 			      Log.d("com.parse.push", "successfully subscribed to the broadcast channel.");
 			    } else {
@@ -28,5 +27,6 @@ public class MainApp extends Application {
 			    }
 			  }
 		});
+		ParseInstallation.getCurrentInstallation().saveInBackground();
 	}
 }

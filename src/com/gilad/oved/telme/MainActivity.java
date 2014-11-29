@@ -1,13 +1,8 @@
 package com.gilad.oved.telme;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,11 +28,10 @@ import android.widget.ExpandableListView;
 import android.widget.Toast;
 
 import com.parse.GetCallback;
+import com.parse.ParseAnalytics;
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 
 public class MainActivity extends Activity {
 	

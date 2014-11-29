@@ -33,7 +33,7 @@ byte[] data;
 	  try {
 			if (intent == null)
 			{
-				Log.d(TAG, "Receiver intent null");
+				System.out.println("Receiver intent null");
 			}
 			else
 			{   
@@ -42,7 +42,7 @@ byte[] data;
 				
 				System.out.println("RECEIVED A MESSAGE!!");
 				String action = intent.getAction();
-				Log.d(TAG, "got action " + action );
+				System.out.println("got action " + action);
 				if (action.equals("com.gilad.oved.holdandtalk.PLAY_MESSAGE"))
 				{
 					String channel = intent.getExtras().getString("com.parse.Channel");
