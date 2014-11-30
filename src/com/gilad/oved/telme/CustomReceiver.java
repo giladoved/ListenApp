@@ -64,7 +64,6 @@ byte[] data;
 						Log.d(TAG, "..." + key + " => " + json.getString(key));
 					}
 					
-					
 					ParseQuery<ParseObject> query = ParseQuery.getQuery("messageData");
 				    query.whereEqualTo("username", fromUsername);
 				    query.addDescendingOrder("createdAt");

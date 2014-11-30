@@ -30,6 +30,7 @@ import com.parse.ParseQuery;
 public class CustomRec extends ParsePushBroadcastReceiver {
 
 	String fromUsername;
+	String messageId;
 	byte[] data;
 	
 	@Override
@@ -44,15 +45,12 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 			{   
 				MediaPlayer mp = MediaPlayer.create(context, R.raw.ding);
 			    mp.start();
-			    
-		        Intent i = new Intent(context, MainActivity.class);
-		        i.putExtras(intent.getExtras());
-		        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		        context.startActivity(i);
 				
 				System.out.println("RECEIVED A MESSAGE!!");
 				String action = intent.getAction();
 				System.out.println("got action " + action);
+				//if (action.equals("com.parse.push.intent.OPEN"))
+			//	{
 					String channel = intent.getExtras().getString("com.parse.Channel");
 					JSONObject json = new JSONObject(intent.getExtras().getString("com.parse.Data"));
 
@@ -68,35 +66,50 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 						}
 						else if (key.equals("from")) {
 						      fromUsername = json.getString("from");
+						} else if (key.equals("idid")) {
+						      messageId = json.getString("idid");
 						}
 						Log.d("nice", "..." + key + " = > " + json.getString(key));
 					}
-					
-					ParseQuery<ParseObject> query = ParseQuery.getQuery("messageData");
-				    query.whereEqualTo("username", fromUsername);
-				    query.addDescendingOrder("createdAt");
-				    query.setLimit(1);
-				    query.findInBackground(new FindCallback<ParseObject>() {
-				        @Override
-						public void done(List<ParseObject> results, ParseException e) {
-						    Toast.makeText(context, "okay we're doing just fine " + e, Toast.LENGTH_SHORT).show();
-				            if (e == null) {
-				            	ParseObject foundVoice = results.get(0);
-				            	System.out.println("foundVoice" + foundVoice);
-				            	ParseFile f = (ParseFile)foundVoice.get("data");
-				            	System.out.println("f is " + f);
-				            	try {
+
+				if (fromUsername != null && fromUsername.length() > 0) {
+					System.out.println("username!!! exists ----> " + fromUsername);
+					System.out.println("message id is : " + messageId);
+					ParseQuery<ParseObject> query = ParseQuery
+							.getQuery("messageData");
+					query.whereEqualTo("username", fromUsername);
+				    query.whereEqualTo("objectId", messageId);
+					query.addDescendingOrder("createdAt");
+					query.setLimit(1);
+					query.findInBackground(new FindCallback<ParseObject>() {
+						@Override
+						public void done(List<ParseObject> results,
+								ParseException e) {
+							Toast.makeText(context,
+									"okay we're doing just fine " + e,
+									Toast.LENGTH_SHORT).show();
+							if (e == null) {
+								ParseObject foundVoice = results.get(0);
+								System.out.println("foundVoice" + foundVoice);
+								ParseFile f = (ParseFile) foundVoice
+										.get("data");
+								System.out.println("f is " + f);
+								try {
 									data = f.getData();
-								    System.out.println("we made it " + data);
-								    playSoundData(data, context);		    
+									System.out.println("we made it " + data);
+									playSoundData(data, context);
 								} catch (ParseException e1) {
 									e1.printStackTrace();
 								}
-				            } else {
-				                Log.d("Error", "Error: " + e.getMessage());
-				            }
-				        }
-				    });
+							} else {
+								Log.d("Error", "Error: " + e.getMessage());
+							}
+						}
+					});
+				} else  {
+					System.out.println("username does not exists ----> " + action);
+				}
+				//}
 			}
 
 		} catch (JSONException e) {

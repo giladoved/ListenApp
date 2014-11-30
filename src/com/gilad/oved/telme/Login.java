@@ -116,7 +116,7 @@ public class Login extends Activity implements OnClickListener {
 
 	@Override
 	public void onClick(View v) {
-		String number = phoneNumberTxt.getText().toString();
+		String number = phoneNumberTxt.getText().toString().trim();
 		/*PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 		PhoneNumber numberProto = null;
 		try {

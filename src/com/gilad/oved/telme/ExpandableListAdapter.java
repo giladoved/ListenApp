@@ -216,7 +216,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					e.printStackTrace();
 				}
 
-				ParseObject voiceText = new ParseObject("messageData");
+				final ParseObject voiceText = new ParseObject("messageData");
 				voiceText.put("username", ParseUser.getCurrentUser().get("username"));
 				ParseFile dataFile = new ParseFile(audioData);
 				try {
@@ -231,7 +231,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					public void done(ParseException e) {
 						System.out.println("walkie talkie noise goes here!!!"
 								+ usernameTo);
-						sendPush(usernameTo, audioData);
+						sendPush(usernameTo, audioData, voiceText.getObjectId());
 					}
 				});
 
@@ -277,7 +277,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 		}
 	}
     
-	public void sendPush(String target, byte[] dataBytes) {
+	public void sendPush(String target, byte[] dataBytes, String objID) {
 		try {
 			System.out.println("audioDATA: " + dataBytes.length);
 			ParseQuery<ParseInstallation> query = ParseInstallation.getQuery();
@@ -288,8 +288,10 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			long dayInterval = 60 * 60 * 24; // 24 hrs
 			String dataStr = "{\"action\": \"com.gilad.oved.holdandtalk.PLAY_MESSAGE\",\"from\":\""
 					+ ParseUser.getCurrentUser().getUsername()
+					+ "\",\"idid\":\"" + objID
 					+ "\",\"alert\": \"Message from "
 					+ ParseUser.getCurrentUser().getUsername() + "\"}";
+			System.out.println("data STRRRRRRRR : " + dataStr);
 			JSONObject data = new JSONObject(dataStr);
 			push.setData(data);
 			push.setExpirationTimeInterval(dayInterval);

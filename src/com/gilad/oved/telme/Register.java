@@ -43,7 +43,7 @@ public class Register extends Activity {
 			@Override
 			public void onClick(View v) {
 				try {
-					register(activationCodeTxt.getText().toString());
+					register(activationCodeTxt.getText().toString().trim());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -58,7 +58,7 @@ public class Register extends Activity {
 			if (number != null) {
 				user.setUsername(number);
 				user.setPassword(number);
-				user.put("nickname", nicknameTxt.getText().toString());
+				user.put("nickname", nicknameTxt.getText().toString().trim());
 				Toast.makeText(getApplicationContext(), "Loading...", Toast.LENGTH_SHORT).show();
 				user.signUpInBackground(new SignUpCallback() {
 					@Override
