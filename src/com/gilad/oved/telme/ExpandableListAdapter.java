@@ -3,6 +3,8 @@ package com.gilad.oved.telme;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -89,10 +91,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 			@Override
 			public void onClick(View v) {
-			    friendNicknames.remove(groupPosition);
-			   	friendNumbers.remove(groupPosition);
-			   	
-			   	ParseQuery<ParseUser> query = ParseUser.getQuery();
+			   	/*ParseQuery<ParseUser> query = ParseUser.getQuery();
         		query.getInBackground(ParseUser.getCurrentUser().getObjectId(), new GetCallback<ParseUser>() {
         			public void done(ParseUser foundUser, ParseException e) {
         				if (e == null) {
@@ -104,7 +103,24 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
         					notifyDataSetChanged();
         				}
         			}
-        		});
+        		});*/
+        		
+        		//remove local user file
+			    File userFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(groupPosition) + "," + friendNumbers.get(groupPosition));
+        		System.out.println("userfile dir is : "+ userFile.getAbsolutePath());
+        	    String[] children = userFile.list();
+        	    for (int i = 0; i < children.length; i++) {
+        	    	new File(userFile, children[i]).delete();
+        	    }
+			    boolean deleted = userFile.delete();
+        		if (deleted) {
+        			friendNicknames.remove(groupPosition);
+			   		friendNumbers.remove(groupPosition);
+					groups.remove(groupPosition);
+					notifyDataSetChanged();
+					
+					Toast.makeText(context, "Contact Deleted", Toast.LENGTH_SHORT).show();
+        		}
 			}
 		});
 		
@@ -115,6 +131,14 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			@Override
 			public void onClick(View v) {
 				Toast.makeText(context, "Clear History!!!", Toast.LENGTH_SHORT).show();
+				//delete local history
+				File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(groupPosition) + "," + friendNumbers.get(groupPosition));
+			    if (dir.listFiles() != null) {
+			    	for (File f : dir.listFiles()) {
+			    		if (!f.getName().contains("jpg"))
+			    			f.delete();
+			    	}
+			    }
 			}
 		});
         
@@ -166,8 +190,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                 convertView = inf.inflate(R.layout.group_item, null);
         }
 
-		//ImageView contactImage = (ImageView) convertView
-		//		.findViewById(R.id.contactImage);
+		ImageView contactImage = (ImageView) convertView
+				.findViewById(R.id.contactImage);
+		contactImage.setImageBitmap(group.getPicture());
 
 		TextView contactName = (TextView) convertView
 				.findViewById(R.id.contactNameLbl);
@@ -177,7 +202,8 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 				.findViewById(R.id.contactNumberLbl);
 		contactNumber.setText(group.getNumber());
 		
-		final String usernameTo = group.getNumber();
+		final String numberTo = group.getNumber();
+		final String nameTo = group.getName();
         
         ImageButton messageBtn = (ImageButton) convertView
 				.findViewById(R.id.contactBtn);
@@ -199,8 +225,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			@Override
 			public void onClick(View v) {
 				System.out.println("touch up......");
-				System.out.println("walkie talkie noise goes here!!! + "
-						+ usernameTo);
+				System.out.println("walkie talkie noise goes here!!! : " + nameTo);
 				MainActivity.stop();
 				firstTouch = true;
 				
@@ -230,11 +255,26 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					@Override
 					public void done(ParseException e) {
 						System.out.println("walkie talkie noise goes here!!!"
-								+ usernameTo);
-						sendPush(usernameTo, audioData, voiceText.getObjectId());
+								+ nameTo);
+						sendPush(numberTo, audioData, voiceText.getObjectId());
+						
+						//add to local history
+					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + nameTo + "," + numberTo);
+					    File voiceNote = new File(dir, String.valueOf(voiceText.getCreatedAt()) + ",sentflag.aac");
+					    FileOutputStream fos;
+					    try {
+					        fos = new FileOutputStream(voiceNote);
+					        fos.write(audioData);
+					        fos.flush();
+					        fos.close();
+					    } catch (FileNotFoundException e1) {
+					        // handle exception
+					    } catch (IOException e1) {
+					        // handle exception
+					    }
 					}
 				});
-
+				
 				firstTouch = true;
 			}
 		});

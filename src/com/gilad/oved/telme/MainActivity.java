@@ -1,8 +1,12 @@
 package com.gilad.oved.telme;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,8 +32,8 @@ import android.widget.ExpandableListView;
 import android.widget.Toast;
 
 import com.parse.GetCallback;
-import com.parse.ParseAnalytics;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
@@ -44,9 +48,10 @@ public class MainActivity extends Activity {
     
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;    
+    ArrayList<Bitmap> friendPictures;   
+    ArrayList<ParseUser> friends;
     
     ArrayList<ArrayList<String>> history;
-
     
     private static final int SELECT_PHOTO = 100;
 	public static final String PREFS_NAME = "MyPrefsFile";
@@ -58,8 +63,10 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
         
+        friends = new ArrayList<ParseUser>();
         friendNicknames = new ArrayList<String>();
         friendNumbers = new ArrayList<String>();
+        friendPictures = new ArrayList<Bitmap>();
         history = new ArrayList<ArrayList<String>>();
         
 		ExpandList = (ExpandableListView) findViewById(R.id.list);
@@ -68,41 +75,25 @@ public class MainActivity extends Activity {
 		outputFile = Environment.getExternalStorageDirectory()
 				.getAbsolutePath() + "/myrecording.3gp";
 		
-        ParseQuery<ParseUser> query = ParseUser.getQuery();
-        query.getInBackground(ParseUser.getCurrentUser().getObjectId(), new GetCallback<ParseUser>() {
-          public void done(ParseUser user, ParseException e) {
-            if (e == null) {
-            	if (user != null) {
-            		List<Object> foundFriendsNums = user.getList("friendsNumbers");
-            		
-            		System.out.println("found numbers is actually skrillex: : :: : " + foundFriendsNums);
-            		if (foundFriendsNums != null) {
-            			
-            			for (Object obj : foundFriendsNums) {
-            				friendNumbers.add(obj != null ? obj.toString() : null);
-            			}
-            			System.out.println("friendNumber is : " + friendNumbers.toString());
-            			List<Object> foundFriendsNames = user.getList("friendsNames");
-                		if (foundFriendsNames != null) {
-                			for (Object obj : foundFriendsNames) {
-                				friendNicknames.add(obj != null ? obj.toString() : null);
-                			}
-                			System.out.println("friendNames is : " + friendNicknames.toString()); 		
-                		}
-            		} else {
-            			System.out.println("not going through with skrillex::::: " + friendNicknames);
-            		}
-            	}
-            } else {
-            	System.out.println("Error: " + e);
-            }
+        //load list of friends names pics and numbers from local
+	    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
+	    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/");
+	    if (dir.listFiles() != null) {
+	    	for (File f : dir.listFiles()) {
+    	    	String[] fileinfo = f.getName().split(",");
+    	    	friendNicknames.add(fileinfo[0]);
+    	    	friendNumbers.add(fileinfo[1]);
+    		    File pictureFile = new File(f.getAbsolutePath(), "profilepic.jpg");
+    		    Bitmap bmp = BitmapFactory.decodeFile(pictureFile.getAbsolutePath());
+    		    friendPictures.add(bmp);
+	    	}
+	    }
     	    
-            ExpListItems = SetStandardGroups();
-            ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
-            ExpandList.setAdapter(ExpAdapter);
-          }
-        });
-        
+        ExpListItems = SetStandardGroups();
+        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
+        ExpandList.setAdapter(ExpAdapter);
+
+            
         addBtn = (Button) findViewById(R.id.addBtn);
         addBtn.setOnClickListener(new OnClickListener() {
 			
@@ -131,30 +122,50 @@ public class MainActivity extends Activity {
 					    	query.getFirstInBackground(new GetCallback<ParseUser>() {
 					    	  public void done(ParseUser user, ParseException e) {
 					    	    if (user == null) {
-				    	        	Toast.makeText(getApplicationContext(), "Could not find the phone number: " + userInput.getText().toString().trim(), Toast.LENGTH_SHORT).show();
+				    	        	Toast.makeText(getApplicationContext(), userInput.getText().toString().trim() + " is not a registered number", Toast.LENGTH_SHORT).show();
 					    	    } else {
 					    	      Log.d("telme", "Retrieved the object.");
 
 					    	      friendNumbers.add(user.getUsername());
 					    	      friendNicknames.add(user.getString("nickname"));
+		            			  ParseFile foundPic = user.getParseFile("profilepic");
+		            			  Bitmap bmp = null;
+								  try {
+									  if (foundPic != null) {
+										  System.out.println("found pic is " + foundPic);
+										  bmp = BitmapFactory.decodeByteArray(foundPic.getData(), 0, foundPic.getData().length);
+									  } else {
+										  System.out.println("found pic is the icon biic");
+											bmp = BitmapFactory.decodeResource(context.getResources(),
+									                    R.drawable.icon);
+									  }
+			            	     	  friendPictures.add(bmp);
+								  } catch (ParseException e1) {
+							   		  e1.printStackTrace();
+								  }
+								  friends.add(user);
 					    	      
-		    	            		//update currrent user friend list on parse
-		    	            		ParseQuery<ParseUser> query = ParseUser.getQuery();
-		    	            		query.getInBackground(ParseUser.getCurrentUser().getObjectId(), new GetCallback<ParseUser>() {
-		    	            			public void done(ParseUser foundUser, ParseException e) {
-		    	            				if (e == null) {
-		    	            					foundUser.put("friendsNames", friendNicknames);
-		    	            					foundUser.put("friendsNumbers", friendNumbers);
-		    	            					foundUser.saveInBackground();
-		    	            					System.out.println("nigga we made it..." + friendNumbers.toString());
-		    	            					System.out.println("bithc pelease: " + friendNicknames.toString());
-		    	            			        ExpListItems = SetStandardGroups();
-		    	            			        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
-		    	            			        ExpandList.setAdapter(ExpAdapter);
-		    	            			        ExpAdapter.notifyDataSetChanged();
-		    	            				}
-		    	            			}
-		    	            		});
+								  // create new folder for new user...
+								  
+								    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
+								    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + user.getString("nickname") + "," + user.getUsername());
+								    dir.mkdirs();
+								    File pictureFile = new File(dir, "profilepic.jpg");
+								    if (pictureFile.exists ()) pictureFile.delete (); 
+								    try {
+								    	FileOutputStream out = new FileOutputStream(pictureFile);
+								    	bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
+								    	out.flush();
+								    	out.close();
+								    } catch (Exception e1) {
+								    	e1.printStackTrace();
+								    }
+								  
+							
+								  ExpListItems = SetStandardGroups();
+	            			        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
+	            			        ExpandList.setAdapter(ExpAdapter);
+	            			        ExpAdapter.notifyDataSetChanged();
 					    	    }
 					    	  }
 					    	});
@@ -184,6 +195,24 @@ public class MainActivity extends Activity {
 		}); 
         
 	}
+    
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+            Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
     
     public static long getSizeInBytes(Bitmap bitmap) {
           return bitmap.getRowBytes() * bitmap.getHeight();
@@ -238,6 +267,14 @@ public class MainActivity extends Activity {
 					e1.printStackTrace();
 				}
 	    	      
+                int bytes = (int)getSizeInBytes(selectedImage);
+                ByteBuffer buffer = ByteBuffer.allocate(bytes); 
+                selectedImage.copyPixelsToBuffer(buffer); 
+                byte[] array = buffer.array();
+                ParseFile imageDataFile = new ParseFile(array);
+                ParseUser.getCurrentUser().put("profilepic", imageDataFile);
+                ParseUser.getCurrentUser().saveInBackground();
+				Toast.makeText(getApplicationContext(), "Updated the profile", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -283,10 +320,10 @@ public class MainActivity extends Activity {
                 "Belgium", "Algeria", "Russia", "Korea Republic" };
         final ArrayList<String> childListDemo = new ArrayList<String>();
         for (int i = 0; i < country_names.length; ++i) {
-          childListDemo.add(country_names[i]);
+          childListDemo.add(country_names[i]); 
         }
 
-        ArrayList<Child> ch_list;
+        ArrayList<Child> ch_list = new ArrayList<Child>();
         ArrayList<Group> list = new ArrayList<Group>();
         int counter = 0;
         
@@ -294,6 +331,7 @@ public class MainActivity extends Activity {
 			Group gru = new Group();
 			gru.setName(group_name);
 			gru.setNumber(friendNumbers.get(counter));
+			gru.setPicture(friendPictures.get(counter));
 			
 			ch_list = new ArrayList<Child>();
 			Child ch = new Child();

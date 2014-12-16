@@ -83,6 +83,10 @@ byte[] data;
 								} catch (ParseException e1) {
 									e1.printStackTrace();
 								}
+				            	
+				            	
+				            	//add to local file history too!
+				            	//~/fromUser/history/anotherhistoryitem.txt
 				            } else {
 				                Log.d("Error", "Error: " + e.getMessage());
 				            }

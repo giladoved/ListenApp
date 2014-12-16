@@ -78,7 +78,7 @@ public class Login extends Activity implements OnClickListener {
 			Toast.makeText(getApplicationContext(), "Confirmation Text Sent", Toast.LENGTH_LONG).show();
 			Intent intent = new Intent(Login.this, Register.class);
 		    intent.putExtra("number", number);
-			Login.this.startActivity(intent);	
+			startActivity(intent);	
 		} catch (Exception e) {
 			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
 					this);
