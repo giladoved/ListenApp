@@ -5,10 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -151,7 +151,7 @@ public class MainActivity extends Activity {
 								    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + user.getString("nickname") + "," + user.getUsername());
 								    dir.mkdirs();
 								    File pictureFile = new File(dir, "profilepic.jpg");
-								    if (pictureFile.exists ()) pictureFile.delete (); 
+								    if (pictureFile.exists()) pictureFile.delete(); 
 								    try {
 								    	FileOutputStream out = new FileOutputStream(pictureFile);
 								    	bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
@@ -311,18 +311,10 @@ public class MainActivity extends Activity {
 	}
     
 	public ArrayList<Group> SetStandardGroups() {
-        String country_names[] = { "Brazil", "Mexico", "Croatia", "Cameroon",
-                "Netherlands", "chile", "Spain", "Australia", "Colombia",
-                "Greece", "Ivory Coast", "Japan", "Costa Rica", "Uruguay",
-                "Italy", "England", "France", "Switzerland", "Ecuador",
-                "Honduras", "Agrentina", "Nigeria", "Bosnia and Herzegovina",
-                "Iran", "Germany", "United States", "Portugal", "Ghana",
-                "Belgium", "Algeria", "Russia", "Korea Republic" };
-        final ArrayList<String> childListDemo = new ArrayList<String>();
-        for (int i = 0; i < country_names.length; ++i) {
-          childListDemo.add(country_names[i]); 
-        }
-
+        ArrayList<String> dates = new ArrayList<String>();
+        ArrayList<String> sentBools = new ArrayList<String>();
+        ArrayList<String> paths = new ArrayList<String>();
+        
         ArrayList<Child> ch_list = new ArrayList<Child>();
         ArrayList<Group> list = new ArrayList<Group>();
         int counter = 0;
@@ -335,7 +327,35 @@ public class MainActivity extends Activity {
 			
 			ch_list = new ArrayList<Child>();
 			Child ch = new Child();
-			ch.setList(childListDemo);
+			
+		    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(counter) + "," + friendNumbers.get(counter));
+		    if (dir.listFiles() != null) {
+		    	for (File f : dir.listFiles()) {
+					if (!f.getName().contains("jpg")) {
+						String[] fileinfo = f.getName().split(",");
+						String dateStr = fileinfo[0];
+						
+						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+						Date convertedDate = new Date();
+						try {
+							convertedDate = dateFormat.parse(dateStr);
+						} catch (java.text.ParseException e) {
+							e.printStackTrace();
+						}
+						
+					    SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss MMM d");
+					    String formattedDateString = formatter.format(convertedDate); 
+						dates.add(formattedDateString);
+						String sentBool = fileinfo[1];
+						sentBools.add(sentBool);
+						paths.add(f.getAbsolutePath());
+					}
+		    	}
+		    }
+			
+			ch.setDates(dates);
+			ch.setSentBools(sentBools);
+			ch.setPaths(paths);
 			ch_list.add(ch);
 			gru.setItems(ch_list);
 

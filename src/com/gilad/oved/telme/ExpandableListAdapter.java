@@ -5,17 +5,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.ExpandableListActivity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Environment;
 import android.util.Base64;
 import android.view.LayoutInflater;
@@ -24,6 +25,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
@@ -34,7 +37,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseInstallation;
@@ -78,7 +80,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     public View getChildView(final int groupPosition, int childPosition,
             boolean isLastChild, View convertView, ViewGroup parent) {
 
-        Child child = (Child) getChild(groupPosition, childPosition);
+        final Child child = (Child) getChild(groupPosition, childPosition);
         if (convertView == null) {
             LayoutInflater infalInflater = (LayoutInflater) context
                     .getSystemService(context.LAYOUT_INFLATER_SERVICE);
@@ -91,20 +93,6 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 			@Override
 			public void onClick(View v) {
-			   	/*ParseQuery<ParseUser> query = ParseUser.getQuery();
-        		query.getInBackground(ParseUser.getCurrentUser().getObjectId(), new GetCallback<ParseUser>() {
-        			public void done(ParseUser foundUser, ParseException e) {
-        				if (e == null) {
-        					foundUser.put("friendsNames", friendNicknames);
-        					foundUser.put("friendsNumbers", friendNumbers);
-        					foundUser.saveInBackground();
-        					
-        					groups.remove(groupPosition);
-        					notifyDataSetChanged();
-        				}
-        			}
-        		});*/
-        		
         		//remove local user file
 			    File userFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(groupPosition) + "," + friendNumbers.get(groupPosition));
         		System.out.println("userfile dir is : "+ userFile.getAbsolutePath());
@@ -130,7 +118,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 			@Override
 			public void onClick(View v) {
-				Toast.makeText(context, "Clear History!!!", Toast.LENGTH_SHORT).show();
+				Toast.makeText(context, "History Cleared", Toast.LENGTH_SHORT).show();
 				//delete local history
 				File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(groupPosition) + "," + friendNumbers.get(groupPosition));
 			    if (dir.listFiles() != null) {
@@ -139,13 +127,17 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			    			f.delete();
 			    	}
 			    }
+			    child.setDates(new ArrayList<String>());
+			    child.setPaths(new ArrayList<String>());
+			    child.setSentBools(new ArrayList<String>());
+				notifyDataSetChanged();
 			}
 		});
         
 		System.out.println("child is :" + child);
 		
 		historyList = (ListView) convertView.findViewById(R.id.historyListView);
-		final SimpleArrayAdapter adapter = new SimpleArrayAdapter(context, android.R.layout.simple_list_item_1, child.getList());
+		final SimpleArrayAdapter adapter = new SimpleArrayAdapter(context, android.R.layout.simple_list_item_1, child.getDates());
 		historyList.setAdapter(adapter);
 		historyList.setOnTouchListener(new OnTouchListener() {
 		    @Override
@@ -154,6 +146,27 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 		        v.getParent().requestDisallowInterceptTouchEvent(true);
 		        return false;
 		    }
+		});
+		historyList.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> av, View v, int pos, long arg3) {
+				File file = new File(child.getPaths().get(pos)); // acquire the file from path string
+				System.out.println("trying to play: " + file.getName());
+				MediaPlayer mediaPlayer = new MediaPlayer();
+				mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+				try {
+					mediaPlayer.setDataSource(file.getAbsolutePath());
+					mediaPlayer.prepare();
+				} catch (IllegalStateException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // might take long! (for buffering, etc)
+				mediaPlayer.start();
+			}			
 		});
 
         return convertView;
@@ -183,7 +196,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded,
             View convertView, ViewGroup parent) {
-        Group group = (Group) getGroup(groupPosition);
+        final Group group = (Group) getGroup(groupPosition);
         if (convertView == null) {
             LayoutInflater inf = (LayoutInflater) context
                     .getSystemService(context.LAYOUT_INFLATER_SERVICE);
@@ -260,18 +273,43 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 						
 						//add to local history
 					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + nameTo + "," + numberTo);
-					    File voiceNote = new File(dir, String.valueOf(voiceText.getCreatedAt()) + ",sentflag.aac");
+					    Date createdAt = voiceText.getCreatedAt();
+					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+					    String formattedDateString = formatter.format(createdAt); 
+					    File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
+					    System.out.println("saving here: " + voiceNote.getAbsolutePath());
 					    FileOutputStream fos;
 					    try {
+					    	System.out.println("new stream");
 					        fos = new FileOutputStream(voiceNote);
 					        fos.write(audioData);
+					    	System.out.println("fos wrote the adata: " + audioData[0]);
 					        fos.flush();
 					        fos.close();
 					    } catch (FileNotFoundException e1) {
+					    	System.out.println("e1: "+ e1);
 					        // handle exception
 					    } catch (IOException e1) {
+					    	System.out.println("e11:" + e1);
 					        // handle exception
 					    }
+					    
+					    ArrayList<String> paths = group.getItems().get(0).getPaths();
+					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
+					    ArrayList<String> dates = group.getItems().get(0).getDates();
+					    paths.add(voiceNote.getAbsolutePath());
+					    sentBools.add("sent");
+					    
+					    Date dte = voiceText.getCreatedAt();
+					    SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss MMM d");
+					    String formattedDateString2 = formatter2.format(dte); 
+						System.out.println("formated dateStr is :" + formattedDateString2);
+						dates.add(formattedDateString2);
+					    
+					    group.getItems().get(0).setDates(dates);
+					    group.getItems().get(0).setPaths(paths);
+					    group.getItems().get(0).setSentBools(sentBools);
+					    notifyDataSetChanged();
 					}
 				});
 				
@@ -328,6 +366,8 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			long dayInterval = 60 * 60 * 24; // 24 hrs
 			String dataStr = "{\"action\": \"com.gilad.oved.holdandtalk.PLAY_MESSAGE\",\"from\":\""
 					+ ParseUser.getCurrentUser().getUsername()
+					+ "\",\"fromName\":\""
+					+ ParseUser.getCurrentUser().get("nickname") 
 					+ "\",\"idid\":\"" + objID
 					+ "\",\"alert\": \"Message from "
 					+ ParseUser.getCurrentUser().getUsername() + "\"}";

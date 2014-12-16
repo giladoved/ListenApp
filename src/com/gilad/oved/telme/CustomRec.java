@@ -85,9 +85,6 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 						@Override
 						public void done(List<ParseObject> results,
 								ParseException e) {
-							Toast.makeText(context,
-									"okay we're doing just fine " + e,
-									Toast.LENGTH_SHORT).show();
 							if (e == null) {
 								ParseObject foundVoice = results.get(0);
 								System.out.println("foundVoice" + foundVoice);
@@ -98,6 +95,10 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 									data = f.getData();
 									System.out.println("we made it " + data);
 									playSoundData(data, context);
+									
+									Intent i = new Intent(context, MainActivity.class);
+									i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
+									context.getApplicationContext().startActivity(i);
 								} catch (ParseException e1) {
 									e1.printStackTrace();
 								}
