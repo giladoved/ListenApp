@@ -1,15 +1,17 @@
 package com.gilad.oved.telme;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+import android.R.color;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -24,6 +26,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -31,9 +34,11 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
+import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
@@ -45,6 +50,7 @@ public class MainActivity extends Activity {
     
     Button addBtn;
     Button editProfileBtn;
+    public static int profileCheckerCounter;
     
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;    
@@ -63,6 +69,40 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
         
+		/*profileCheckerCounter++;
+		if (profileCheckerCounter >= 100) {
+			profileCheckerCounter = 0;
+			ParseQuery<ParseUser> query = ParseUser.getQuery();
+	    	query.whereNotEqualTo("username", ParseUser.getCurrentUser().getUsername());
+	    	query.findInBackground(new FindCallback<ParseUser>() {
+	    	    public void done(List<ParseUser> userList, ParseException e) {
+	    	    	for (ParseUser user : userList) {
+	    	    		ParseFile foundPic = user.getParseFile("profilepic");
+	      			  	Bitmap bmp = null;
+	      			  	try {
+						  if (foundPic != null) {
+							  bmp = BitmapFactory.decodeByteArray(foundPic.getData(), 0, foundPic.getData().length);
+						  }
+	      			  	} catch (ParseException e1) {
+	      			  		e1.printStackTrace();
+	      			  	}
+					    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
+					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
+					    dir.mkdirs();
+					    File pictureFile = new File(dir, user.getString("nickname") + "," + user.getUsername() + ".jpg");
+					    if (pictureFile.exists()) pictureFile.delete(); 
+					    try {
+					    	FileOutputStream out = new FileOutputStream(pictureFile);
+					    	bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
+					    	out.flush();
+					    	out.close();
+					    } catch (Exception e1) {
+					    	e1.printStackTrace();
+					    }
+	    	    	}
+	    	    }
+	    	});*/
+		
         friends = new ArrayList<ParseUser>();
         friendNicknames = new ArrayList<String>();
         friendNumbers = new ArrayList<String>();
@@ -73,18 +113,25 @@ public class MainActivity extends Activity {
 		
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		outputFile = Environment.getExternalStorageDirectory()
-				.getAbsolutePath() + "/myrecording.3gp";
+				.getAbsolutePath() + "/ListenApp/myrecording.3gp";
 		
         //load list of friends names pics and numbers from local
 	    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
-	    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/");
+	    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures");
 	    if (dir.listFiles() != null) {
 	    	for (File f : dir.listFiles()) {
     	    	String[] fileinfo = f.getName().split(",");
     	    	friendNicknames.add(fileinfo[0]);
     	    	friendNumbers.add(fileinfo[1]);
-    		    File pictureFile = new File(f.getAbsolutePath(), "profilepic.jpg");
-    		    Bitmap bmp = BitmapFactory.decodeFile(pictureFile.getAbsolutePath());
+    		    Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath());
+    		    friendPictures.add(bmp);
+	    	}
+	    }
+	    
+	    File pictureDir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
+	    if (pictureDir.listFiles() != null) {
+	    	for (File f : pictureDir.listFiles()) {
+    		    Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath());
     		    friendPictures.add(bmp);
 	    	}
 	    }
@@ -92,7 +139,6 @@ public class MainActivity extends Activity {
         ExpListItems = SetStandardGroups();
         ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
         ExpandList.setAdapter(ExpAdapter);
-
             
         addBtn = (Button) findViewById(R.id.addBtn);
         addBtn.setOnClickListener(new OnClickListener() {
@@ -148,9 +194,9 @@ public class MainActivity extends Activity {
 								  // create new folder for new user...
 								  
 								    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
-								    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + user.getString("nickname") + "," + user.getUsername());
+								    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
 								    dir.mkdirs();
-								    File pictureFile = new File(dir, "profilepic.jpg");
+								    File pictureFile = new File(dir, user.getString("nickname") + "," + user.getUsername() + ".jpg");
 								    if (pictureFile.exists()) pictureFile.delete(); 
 								    try {
 								    	FileOutputStream out = new FileOutputStream(pictureFile);
@@ -188,63 +234,14 @@ public class MainActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
+				System.out.println("button clicked :)");
 				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
 				photoPickerIntent.setType("image/*");
-				startActivityForResult(photoPickerIntent, SELECT_PHOTO); 
+				startActivityForResult(photoPickerIntent, SELECT_PHOTO);
 			}
 		}); 
-        
+		
 	}
-    
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-
-    /* Checks if external storage is available to at least read */
-    public boolean isExternalStorageReadable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-            Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-    
-    public static long getSizeInBytes(Bitmap bitmap) {
-          return bitmap.getRowBytes() * bitmap.getHeight();
-    }
-    
-    private Bitmap decodeUri(Uri selectedImage) throws FileNotFoundException {
-        // Decode image size
-        BitmapFactory.Options o = new BitmapFactory.Options();
-        o.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o);
-
-        // The new size we want to scale to
-        final int REQUIRED_SIZE = 140;
-
-        // Find the correct scale value. It should be the power of 2.
-        int width_tmp = o.outWidth, height_tmp = o.outHeight;
-        int scale = 1;
-        while (true) {
-            if (width_tmp / 2 < REQUIRED_SIZE
-               || height_tmp / 2 < REQUIRED_SIZE) {
-                break;
-            }
-            width_tmp /= 2;
-            height_tmp /= 2;
-            scale *= 2;
-        }
-
-        // Decode with inSampleSize
-        BitmapFactory.Options o2 = new BitmapFactory.Options();
-        o2.inSampleSize = scale;
-        return BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o2);
-    }
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) { 
@@ -253,31 +250,34 @@ public class MainActivity extends Activity {
         switch(requestCode) { 
         case SELECT_PHOTO:
             if(resultCode == RESULT_OK){  
-                Uri selectedImageURI = imageReturnedIntent.getData();
-                InputStream imageStream = null;
-				try {
-					imageStream = getContentResolver().openInputStream(selectedImageURI);
+            	System.out.println("choossing phooto: " + resultCode);
+            	Bitmap selectedImage = null;
+            	try {
+					Uri imageUri = imageReturnedIntent.getData();
+					InputStream imageStream = getContentResolver().openInputStream(imageUri);
+					selectedImage = BitmapFactory.decodeStream(imageStream);
 				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-                try {
-					selectedImage = decodeUri(selectedImageURI);
-				} catch (FileNotFoundException e1) {
-					e1.printStackTrace();
+					e.printStackTrace(); 
 				}
 	    	      
-                int bytes = (int)getSizeInBytes(selectedImage);
-                ByteBuffer buffer = ByteBuffer.allocate(bytes); 
-                selectedImage.copyPixelsToBuffer(buffer); 
-                byte[] array = buffer.array();
-                ParseFile imageDataFile = new ParseFile(array);
-                ParseUser.getCurrentUser().put("profilepic", imageDataFile);
+            	ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				// Compress image to lower quality scale 1 - 100
+				selectedImage.compress(Bitmap.CompressFormat.PNG, 25, stream);
+				byte[] image = stream.toByteArray();
+				ParseFile file = new ParseFile(image);
+				file.saveInBackground();
+				
+                ParseUser.getCurrentUser().put("profilepic", file);
                 ParseUser.getCurrentUser().saveInBackground();
 				Toast.makeText(getApplicationContext(), "Updated the profile", Toast.LENGTH_SHORT).show();
             }
         }
     }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return true;
+    }  
     
     @Override
 	public void onBackPressed() {
