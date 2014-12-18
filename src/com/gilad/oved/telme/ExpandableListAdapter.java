@@ -218,18 +218,23 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 		final String numberTo = group.getNumber();
 		final String nameTo = group.getName();
         
-        ImageButton messageBtn = (ImageButton) convertView
+        final ImageButton messageBtn = (ImageButton) convertView
 				.findViewById(R.id.contactBtn);
         messageBtn.setOnTouchListener(new OnTouchListener() {
 
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				if (firstTouch) {
-					MainActivity.start();
+				if (event.getAction()==MotionEvent.ACTION_DOWN) {
+	            	System.out.println("TOUCH!!: down");
+					if (firstTouch) {
+						MainActivity.start();
+						messageBtn.setImageResource(R.drawable.recordpressed);
+					}
+					firstTouch = false;
+					
+					return false;
 				}
-				firstTouch = false;
-				
-				return false;
+	            return false;
 			}
 
 		});
@@ -310,6 +315,8 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					    group.getItems().get(0).setPaths(paths);
 					    group.getItems().get(0).setSentBools(sentBools);
 					    notifyDataSetChanged();
+					    
+						messageBtn.setImageResource(R.drawable.record);
 					}
 				});
 				

@@ -46,6 +46,6 @@ android:paddingTop="10dp" >
         android:layout_weight="1"
         android:layout_gravity="right"
         android:focusable="false"
-        android:src="@drawable/bubble" />
+        android:src="@drawable/record" />
 
 </LinearLayout>

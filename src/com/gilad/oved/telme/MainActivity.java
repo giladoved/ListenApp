@@ -179,7 +179,7 @@ public class MainActivity extends Activity {
 									  } else {
 										  System.out.println("found pic is the icon biic");
 											bmp = BitmapFactory.decodeResource(context.getResources(),
-									                    R.drawable.icon);
+									                    R.drawable.userprofile);
 									  }
 			            	     	  friendPictures.add(bmp);
 								  } catch (ParseException e1) {
