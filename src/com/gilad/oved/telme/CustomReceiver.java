@@ -44,6 +44,10 @@ byte[] data;
 			}
 			else
 			{   
+				Intent pupInt = new Intent(context, MainActivity.class);
+				pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				context.getApplicationContext().startActivity(pupInt);
+				
 				MediaPlayer mp = MediaPlayer.create(context, R.raw.ding);
 			    mp.start();
 				
@@ -61,9 +65,9 @@ byte[] data;
 						String key = (String) itr.next();
 						if (key.equals("username"))
 						{
-							Intent pupInt = new Intent(context, MainActivity.class);
-							pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-							context.getApplicationContext().startActivity(pupInt);
+							Intent pupInt2 = new Intent(context, MainActivity.class);
+							pupInt2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							context.getApplicationContext().startActivity(pupInt2);
 						}
 						else if (key.equals("from")) {
 						      fromUsername = json.getString("from");
@@ -111,10 +115,6 @@ byte[] data;
 							    } catch (IOException e1) {
 							        // handle exception
 							    }
-							    
-								Intent pupInt = new Intent(context, MainActivity.class);
-								pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-								context.getApplicationContext().startActivity(pupInt);
 
 				            } else {
 				                Log.d("Error", "Error: " + e.getMessage());
