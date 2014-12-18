@@ -1223,8 +1223,7 @@ containing a value of this type.
         public static final int child_item=0x7f03001c;
         public static final int group_add=0x7f03001d;
         public static final int group_item=0x7f03001e;
-        public static final int group_item2=0x7f03001f;
-        public static final int support_simple_spinner_dropdown_item=0x7f030020;
+        public static final int support_simple_spinner_dropdown_item=0x7f03001f;
     }
     public static final class menu {
         public static final int login=0x7f0d0000;

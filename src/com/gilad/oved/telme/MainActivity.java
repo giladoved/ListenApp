@@ -9,10 +9,9 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
-import android.R.color;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -35,11 +34,9 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
-import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
-import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
@@ -351,6 +348,11 @@ public class MainActivity extends Activity {
 		    	}
 		    }
 			
+		    //newest on top
+		    Collections.reverse(dates);
+		    Collections.reverse(sentBools);
+		    Collections.reverse(paths);
+		    
 			ch.setDates(dates);
 			ch.setSentBools(sentBools);
 			ch.setPaths(paths);
