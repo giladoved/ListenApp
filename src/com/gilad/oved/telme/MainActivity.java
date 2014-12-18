@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -117,20 +118,15 @@ public class MainActivity extends Activity {
 		
         //load list of friends names pics and numbers from local
 	    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
-	    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures");
+	    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
 	    if (dir.listFiles() != null) {
 	    	for (File f : dir.listFiles()) {
     	    	String[] fileinfo = f.getName().split(",");
+    	    	System.out.println("fileinfo: " + Arrays.toString(fileinfo));
     	    	friendNicknames.add(fileinfo[0]);
-    	    	friendNumbers.add(fileinfo[1]);
-    		    Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath());
-    		    friendPictures.add(bmp);
-	    	}
-	    }
-	    
-	    File pictureDir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
-	    if (pictureDir.listFiles() != null) {
-	    	for (File f : pictureDir.listFiles()) {
+    	    	String num = fileinfo[1].substring(0, fileinfo[1].length()-4);
+    	    	System.out.println("num is : " + num);
+    	    	friendNumbers.add(num);
     		    Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath());
     		    friendPictures.add(bmp);
 	    	}
@@ -192,6 +188,8 @@ public class MainActivity extends Activity {
 								  friends.add(user);
 					    	      
 								  // create new folder for new user...
+								    File dirUser = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + user.getString("nickname") + "," + user.getUsername());
+								    dirUser.mkdirs();
 								  
 								    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
 								    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
@@ -206,8 +204,8 @@ public class MainActivity extends Activity {
 								    } catch (Exception e1) {
 								    	e1.printStackTrace();
 								    }
-								  
-							
+								    
+								    
 								  ExpListItems = SetStandardGroups();
 	            			        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
 	            			        ExpandList.setAdapter(ExpAdapter);
