@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "TelMe": {
+            "applicationId": "fXhQsK4oV7zU1VIoJhzHiJzLn28V76x49eZUo16P", 
+            "masterKey": "eT5m2u5RyBBgUPBf0d1wgKahH5LM97rUl6Ii2P4s"
+        }, 
+        "_default": {
+            "link": "TelMe"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.3.2"
+    }
+}

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -34,7 +35,9 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
+import com.parse.FunctionCallback;
 import com.parse.GetCallback;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseQuery;
@@ -119,15 +122,46 @@ public class MainActivity extends Activity {
 					.setPositiveButton("OK",
 					  new DialogInterface.OnClickListener() {
 					    public void onClick(DialogInterface dialog,int id) {
-					    	String input = userInput.getText().toString().trim();
+					    	final String input = userInput.getText().toString().trim();
 					    	System.out.println("intput is : " + input);
 					    	if (!friendNumbers.contains(input)) {
 					    	ParseQuery<ParseUser> query = ParseUser.getQuery();
 					    	query.whereEqualTo("username", input);
 					    	query.getFirstInBackground(new GetCallback<ParseUser>() {
-					    	  public void done(ParseUser user, ParseException e) {
-					    	    if (user == null) {
-				    	        	Toast.makeText(getApplicationContext(), userInput.getText().toString().trim() + " is not a registered number", Toast.LENGTH_SHORT).show();
+					    	  public void done(final ParseUser user, ParseException e) {
+					    	    if (user == null) {				    	        	
+				    	        	//http://stackoverflow.com/questions/2478517/how-to-display-a-yes-no-dialog-box-in-android
+				    	        	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+				    	        	    @Override
+				    	        	    public void onClick(DialogInterface dialog, int which) {
+				    	        	        switch (which){
+				    	        	        case DialogInterface.BUTTON_POSITIVE:
+				    	        	        	//shoot them a text message invite
+				    	        	        	HashMap<String, Object> params = new HashMap<String, Object>();
+				    	        	        	params.put("fromNumber", ParseUser.getCurrentUser().getUsername());
+				    	        	        	params.put("fromName", ParseUser.getCurrentUser().getString("nickname"));
+				    	        	        	params.put("toNumber", input);
+				    	        	        	System.out.println("params are : " + params);
+				    	        	        	ParseCloud.callFunctionInBackground("inviteWithTwilio", params, new FunctionCallback<String>() {
+				    	        	        		  public void done(String result, ParseException e) {
+				    	        	        		    if (e == null) {
+				    	        	        		    	Toast.makeText(getApplicationContext(), "Your SMS invitation has been sent!", Toast.LENGTH_SHORT).show();
+				    	        	        		    }
+				    	        	        		  }
+				    	        	        		});
+				    	        	        	
+				    	        	            break;
+				    	        	        case DialogInterface.BUTTON_NEGATIVE:
+				    	        	        	System.out.println("doesn't want to invite them... :(");
+				    	        	            break;
+				    	        	        }
+				    	        	    }
+				    	        	};
+
+				    	        	AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+				    	        	builder.setMessage(userInput.getText().toString().trim() + " is not a registered number. Would you like to invite them to use ListenApp?").setPositiveButton("Yes", dialogClickListener)
+				    	        	    .setNegativeButton("No", dialogClickListener).show();
+					    	    
 					    	    } else {
 					    	      Log.d("telme", "Retrieved the object.");
 
