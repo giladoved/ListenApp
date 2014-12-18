@@ -72,7 +72,7 @@ public class Login extends Activity implements OnClickListener {
 			System.out.println("sending message to: " + number);
 			ParsePush push = new ParsePush();
 			push.setChannel("Gilad" + ParseInstallation.getCurrentInstallation().getInstallationId());
-			push.setMessage("47303 - your activation code to register for talkit");
+			push.setMessage("47303 - your activation code to register for ListenApp");
 			push.sendInBackground();
 			
 			Toast.makeText(getApplicationContext(), "Confirmation Text Sent", Toast.LENGTH_LONG).show();

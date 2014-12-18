@@ -36,11 +36,11 @@
         android:name="MainApp"
         android:allowBackup="true"
         android:icon="@drawable/icon"
-        android:label="TelMe"
+        android:label="ListenApp"
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.gilad.oved.telme.Login"
-            android:label="TelMe" >
+            android:label="ListenApp" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -49,11 +49,11 @@
         </activity>
         <activity
             android:name="com.gilad.oved.telme.MainActivity"
-            android:label="TelMe" >
+            android:label="ListenApp" >
         </activity>
         <activity
             android:name="com.gilad.oved.telme.Register"
-            android:label="TelMe" >
+            android:label="ListenApp" >
         </activity>
 
         <service android:name="com.parse.PushService" />
