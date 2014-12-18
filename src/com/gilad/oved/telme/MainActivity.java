@@ -66,40 +66,6 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-        
-		/*profileCheckerCounter++;
-		if (profileCheckerCounter >= 100) {
-			profileCheckerCounter = 0;
-			ParseQuery<ParseUser> query = ParseUser.getQuery();
-	    	query.whereNotEqualTo("username", ParseUser.getCurrentUser().getUsername());
-	    	query.findInBackground(new FindCallback<ParseUser>() {
-	    	    public void done(List<ParseUser> userList, ParseException e) {
-	    	    	for (ParseUser user : userList) {
-	    	    		ParseFile foundPic = user.getParseFile("profilepic");
-	      			  	Bitmap bmp = null;
-	      			  	try {
-						  if (foundPic != null) {
-							  bmp = BitmapFactory.decodeByteArray(foundPic.getData(), 0, foundPic.getData().length);
-						  }
-	      			  	} catch (ParseException e1) {
-	      			  		e1.printStackTrace();
-	      			  	}
-					    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
-					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
-					    dir.mkdirs();
-					    File pictureFile = new File(dir, user.getString("nickname") + "," + user.getUsername() + ".jpg");
-					    if (pictureFile.exists()) pictureFile.delete(); 
-					    try {
-					    	FileOutputStream out = new FileOutputStream(pictureFile);
-					    	bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
-					    	out.flush();
-					    	out.close();
-					    } catch (Exception e1) {
-					    	e1.printStackTrace();
-					    }
-	    	    	}
-	    	    }
-	    	});*/
 		
         friends = new ArrayList<ParseUser>();
         friendNicknames = new ArrayList<String>();
@@ -130,7 +96,7 @@ public class MainActivity extends Activity {
 	    }
     	    
         ExpListItems = SetStandardGroups();
-        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
+        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, friendPictures, ExpandList);
         ExpandList.setAdapter(ExpAdapter);
             
         addBtn = (Button) findViewById(R.id.addBtn);
@@ -204,7 +170,7 @@ public class MainActivity extends Activity {
 								    
 								    
 								  ExpListItems = SetStandardGroups();
-	            			        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, ExpandList);
+	            			        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, friendPictures, ExpandList);
 	            			        ExpandList.setAdapter(ExpAdapter);
 	            			        ExpAdapter.notifyDataSetChanged();
 					    	    }

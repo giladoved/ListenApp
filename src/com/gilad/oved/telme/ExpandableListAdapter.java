@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Environment;
@@ -56,13 +57,15 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 		
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;
+    ArrayList<Bitmap> friendPictures;
 
-    public ExpandableListAdapter(Context context, ArrayList<Group> groups, ArrayList<String> nicknames, ArrayList<String> numbers, ExpandableListView listView) {
+    public ExpandableListAdapter(Context context, ArrayList<Group> groups, ArrayList<String> nicknames, ArrayList<String> numbers, ArrayList<Bitmap> pictures, ExpandableListView listView) {
         this.context = context;
         this.groups = groups;
         
         friendNicknames = nicknames;
         friendNumbers = numbers;
+        friendPictures = pictures;
     }
 
     @Override
@@ -101,9 +104,13 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
         	    	new File(userFile, children[i]).delete();
         	    }
 			    boolean deleted = userFile.delete();
-        		if (deleted) {
+			    
+			    File userPicFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/" + friendNicknames.get(groupPosition) + "," + friendNumbers.get(groupPosition) + ".jpg");
+			    boolean pictureDeleted = userPicFile.delete();
+        		if (deleted && pictureDeleted) {
         			friendNicknames.remove(groupPosition);
 			   		friendNumbers.remove(groupPosition);
+			   		friendPictures.remove(groupPosition);
 					groups.remove(groupPosition);
 					notifyDataSetChanged();
 					
