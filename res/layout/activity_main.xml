@@ -12,19 +12,24 @@
         android:layout_height="wrap_content" >
         
             <Button
-        android:id="@+id/addBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Add Contact"
-        android:padding="20dp" />
+                android:id="@+id/addBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:minHeight="24dp"
+                android:textSize="10sp"
+                android:text="Add Contact"
+                android:textAlignment="center" />
 
         <Button
-        android:id="@+id/editProfile"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:text="Edit Profile"
-        android:padding="20dp" />
+            android:id="@+id/editProfile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:minHeight="24dp"
+            android:padding="20dp"
+            android:text="Edit Profile"
+            android:textSize="10sp" />
 
     </RelativeLayout>
 
