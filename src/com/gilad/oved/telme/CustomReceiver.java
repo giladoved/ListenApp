@@ -44,10 +44,6 @@ byte[] data;
 			}
 			else
 			{   
-				Intent pupInt = new Intent(context, MainActivity.class);
-				pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				context.getApplicationContext().startActivity(pupInt);
-				
 				MediaPlayer mp = MediaPlayer.create(context, R.raw.ding);
 			    mp.start();
 				
@@ -92,30 +88,35 @@ byte[] data;
 				            	try {
 									data = f.getData();
 								    System.out.println("we made it " + data);
+								    
+					            	//add to local file history too!
+					            	File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + fromNickname + "," + fromUsername);
+					            	Date createdAt = foundVoice.getCreatedAt();
+								    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+								    String formattedDateString = formatter.format(createdAt); 
+					            	File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
+								    System.out.println("location of stirng will be: " + voiceNote.getAbsolutePath());
+								    FileOutputStream fos;
+								    try {
+								        fos = new FileOutputStream(voiceNote);
+								        fos.write(data);
+								        fos.flush();
+								        fos.close();
+								    } catch (FileNotFoundException e1) {
+								        // handle exception
+								    } catch (IOException e1) {
+								        // handle exception
+								    }
+								    
+									Intent pupInt = new Intent(context, MainActivity.class);
+									pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+									context.getApplicationContext().startActivity(pupInt);
+								    
 								    playSoundData(data, context);
 								} catch (ParseException e1) {
 									e1.printStackTrace();
 								}
 				            	
-				            	//add to local file history too!
-				            	File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + fromNickname + "," + fromUsername);
-				            	Date createdAt = foundVoice.getCreatedAt();
-							    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-							    String formattedDateString = formatter.format(createdAt); 
-				            	File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
-							    System.out.println("location of stirng will be: " + voiceNote.getAbsolutePath());
-							    FileOutputStream fos;
-							    try {
-							        fos = new FileOutputStream(voiceNote);
-							        fos.write(data);
-							        fos.flush();
-							        fos.close();
-							    } catch (FileNotFoundException e1) {
-							        // handle exception
-							    } catch (IOException e1) {
-							        // handle exception
-							    }
-
 				            } else {
 				                Log.d("Error", "Error: " + e.getMessage());
 				            }

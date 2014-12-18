@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 import android.app.Activity;
@@ -324,8 +324,15 @@ public class MainActivity extends Activity {
 			Child ch = new Child();
 			
 		    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(counter) + "," + friendNumbers.get(counter));
-		    if (dir.listFiles() != null) {
-		    	for (File f : dir.listFiles()) {
+		    File[] files = dir.listFiles();
+		    Arrays.sort(files, new Comparator<File>(){
+		        public int compare(File f1, File f2)
+		        {
+		            return -Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+		        } });
+		    
+		    if (files != null) {
+		    	for (File f : files) {
 					if (!f.getName().contains("jpg")) {
 						String[] fileinfo = f.getName().split(",");
 						String dateStr = fileinfo[0];
@@ -347,11 +354,6 @@ public class MainActivity extends Activity {
 					}
 		    	}
 		    }
-			
-		    //newest on top
-		    Collections.reverse(dates);
-		    Collections.reverse(sentBools);
-		    Collections.reverse(paths);
 		    
 			ch.setDates(dates);
 			ch.setSentBools(sentBools);

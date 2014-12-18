@@ -302,14 +302,14 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					    ArrayList<String> paths = group.getItems().get(0).getPaths();
 					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
 					    ArrayList<String> dates = group.getItems().get(0).getDates();
-					    paths.add(voiceNote.getAbsolutePath());
-					    sentBools.add("sent");
+					    paths.add(0,voiceNote.getAbsolutePath());
+					    sentBools.add(0,"sent");
 					    
 					    Date dte = voiceText.getCreatedAt();
 					    SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss MMM d");
 					    String formattedDateString2 = formatter2.format(dte); 
 						System.out.println("formated dateStr is :" + formattedDateString2);
-						dates.add(formattedDateString2);
+						dates.add(0, formattedDateString2);
 					    
 					    group.getItems().get(0).setDates(dates);
 					    group.getItems().get(0).setPaths(paths);
