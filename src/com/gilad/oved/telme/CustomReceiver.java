@@ -16,6 +16,8 @@ import org.json.JSONObject;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Environment;
@@ -59,13 +61,7 @@ byte[] data;
 					Iterator itr = json.keys();
 					while (itr.hasNext()) {
 						String key = (String) itr.next();
-						if (key.equals("username"))
-						{
-							Intent pupInt2 = new Intent(context, MainActivity.class);
-							pupInt2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-							context.getApplicationContext().startActivity(pupInt2);
-						}
-						else if (key.equals("from")) {
+						if (key.equals("from")) {
 						      fromUsername = json.getString("from");
 						} else if (key.equals("fromName")) {
 							fromNickname = json.getString("fromName");
@@ -153,6 +149,7 @@ byte[] data;
  
 	        MediaPlayer mediaPlayer = new MediaPlayer();
 	        FileInputStream fis = new FileInputStream(tempAudio);
+	        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 	        mediaPlayer.setDataSource(fis.getFD());
 	        mediaPlayer.setVolume(1.0f, 1.0f);
 
