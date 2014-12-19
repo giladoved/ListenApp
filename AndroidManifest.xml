@@ -82,10 +82,15 @@
                 <action android:name="com.parse.push.intent.RECEIVE" />
                 <action android:name="com.parse.push.intent.DELETE" />
                 <action android:name="com.parse.push.intent.OPEN" />
-                <action android:name="com.gilad.oved.holdandtalk.PLAY_MESSAGE" />
             </intent-filter>
         </receiver>
-        <meta-data android:name="com.parse.push.notification_icon" android:resource="@drawable/icon"/>
+
+        <receiver android:name="com.gilad.oved.telme.CustomReceiver" android:exported="false">
+  			<intent-filter>
+   				<action android:name="com.gilad.oved.holdandtalk.PLAY_MESSAGE" />
+ 	        </intent-filter>
+		</receiver>
+		<meta-data android:name="com.parse.push.notification_icon" android:resource="@drawable/icon"/>
     </application>
 
 </manifest>

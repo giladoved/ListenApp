@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 
 import com.parse.FindCallback;
@@ -35,105 +36,6 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 	byte[] data;
 	
 	@Override
-	public void onPushReceive(final Context context, Intent intent) {
-		System.out.println("intent: " + intent);
-		try {
-			if (intent == null)
-			{
-				System.out.println("Receiver intent null");
-			}
-			else 
-			{   
-				final MediaPlayer mp = MediaPlayer.create(context, R.raw.ding2);
-			    mp.start();
-
-				String action = intent.getAction();
-				System.out.println("got action " + action);
-				if (action.equals("com.gilad.oved.holdandtalk.PLAY_MESSAGE"))
-				{
-					String channel = intent.getExtras().getString("com.parse.Channel");
-					JSONObject json = new JSONObject(intent.getExtras().getString("com.parse.Data"));
-
-					Log.d("nice", "got action " + action + " on channel " + channel + " with:");
-					Iterator itr = json.keys();
-					System.out.println("working with this: " + json);
-					while (itr.hasNext()) {
-						String key = (String) itr.next();
-						System.out.println("has key: " + key);
-						if (key.equals("from")) {
-						      fromUsername = json.getString("from");
-						} else if (key.equals("fromName")) {
-							fromNickname = json.getString("fromName");
-						}
-						Log.d("nice", "..." + key + " => " + json.getString(key));
-					}
-					
-					ParseQuery<ParseObject> query = ParseQuery.getQuery("messageData");
-				    query.whereEqualTo("username", fromUsername);
-				    query.addDescendingOrder("createdAt");
-				    query.setLimit(1);
-				    query.findInBackground(new FindCallback<ParseObject>() {
-				        @Override
-						public void done(List<ParseObject> results, ParseException e) {
-				            if (e == null) {
-				            	ParseObject foundVoice = results.get(0);
-				            	System.out.println("foundVoice" + foundVoice);
-				            	ParseFile f = (ParseFile)foundVoice.get("data");
-				            	System.out.println("f is " + f);
-				            	try {
-									data = f.getData();
-								    System.out.println("we made it " + data);
-								    
-					            	//add to local file history too!
-					            	File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + fromNickname + "," + fromUsername);
-					            	Date createdAt = foundVoice.getCreatedAt();
-								    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-								    String formattedDateString = formatter.format(createdAt); 
-					            	File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
-								    System.out.println("location of stirng will be: " + voiceNote.getAbsolutePath());
-								    FileOutputStream fos;
-								    try {
-								        fos = new FileOutputStream(voiceNote);
-								        fos.write(data);
-								        fos.flush();
-								        fos.close();
-								    } catch (FileNotFoundException e1) {
-								        // handle exception
-										System.out.println("1parse playing exception: " + e1);
-								    } catch (IOException e1) {
-								        // handle exception
-										System.out.println("2parse playing exception: " + e1);
-								    }
-								    
-								    System.out.println("showing new intent now");
-									Intent pupInt = new Intent(context, MainActivity.class);
-									pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-									context.getApplicationContext().startActivity(pupInt);
-								    
-									mp.setOnCompletionListener(new OnCompletionListener() {
-
-										   public void onCompletion(MediaPlayer mp) {
-											    playSoundData(data, context);
-										    }
-										});
-								} catch (ParseException e1) {
-									System.out.println("parse playing exception: " + e1);
-								}
-				            	
-				            } else {
-				                Log.d("Error", "Error: " + e.getMessage());
-				            }
-				        }
-				    });
-				}
-			}
-
-		} catch (JSONException e) {
-			Log.d("nice", "JSONException: " + e.getMessage());
-		}
-	}
-	
-	@Override
     public void onPushOpen(final Context context, final Intent intent) {
         Log.e("Push", "Clicked!!!!");
         try {
@@ -143,7 +45,7 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 			}
 			else
 			{   
-				MediaPlayer mp = MediaPlayer.create(context, R.raw.ding2);
+				final MediaPlayer mp = MediaPlayer.create(context, R.raw.ding2);
 			    mp.start();
 				
 				System.out.println("RECEIVED A MESSAGE!!");
@@ -186,11 +88,24 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 								try {
 									data = f.getData();
 									System.out.println("we made it " + data);
-									playSoundData(data, context);
 									
 									Intent i = new Intent(context, MainActivity.class);
 									i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
 									context.getApplicationContext().startActivity(i);
+									
+									mp.setOnCompletionListener(new OnCompletionListener() {
+										
+										@Override
+										public void onCompletion(MediaPlayer mp) {
+											final Handler handler = new Handler();
+											handler.postDelayed(new Runnable() {
+											  @Override
+											  public void run() {
+												   playSoundData(data, context);
+											  }
+											}, 200);
+										}
+									});
 								} catch (ParseException e1) {
 									e1.printStackTrace();
 								}
@@ -202,7 +117,6 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 				} else  {
 					System.out.println("username does not exists ----> " + action);
 				}
-				//}
 			}
 
 		} catch (JSONException e) {

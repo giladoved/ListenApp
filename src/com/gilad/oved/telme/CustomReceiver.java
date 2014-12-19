@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -18,9 +17,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.parse.FindCallback;
 import com.parse.ParseException;
@@ -44,7 +44,7 @@ byte[] data;
 			}
 			else
 			{   
-				MediaPlayer mp = MediaPlayer.create(context, R.raw.ding);
+				final MediaPlayer mp = MediaPlayer.create(context, R.raw.ding2);
 			    mp.start();
 				
 				System.out.println("RECEIVED A MESSAGE!!");
@@ -112,7 +112,19 @@ byte[] data;
 									pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 									context.getApplicationContext().startActivity(pupInt);
 								    
-								    playSoundData(data, context);
+									mp.setOnCompletionListener(new OnCompletionListener() {
+										
+										@Override
+										public void onCompletion(MediaPlayer mp) {
+											final Handler handler = new Handler();
+											handler.postDelayed(new Runnable() {
+											  @Override
+											  public void run() {
+												   playSoundData(data, context);
+											  }
+											}, 200);
+										}
+									});
 								} catch (ParseException e1) {
 									e1.printStackTrace();
 								}

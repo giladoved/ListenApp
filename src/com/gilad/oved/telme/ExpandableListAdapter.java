@@ -20,6 +20,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Environment;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -49,6 +50,7 @@ import com.parse.SaveCallback;
 import com.parse.SendCallback;
 
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
+	private static final String TAG = "ListenApp";
     private Context context;
     private ArrayList<Group> groups;
     
@@ -222,7 +224,96 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
         
         final ImageButton messageBtn = (ImageButton) convertView
 				.findViewById(R.id.contactBtn);
-        messageBtn.setOnTouchListener(new OnTouchListener() {
+		messageBtn.setFocusable(false);
+        messageBtn.setOnTouchListener(new View.OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                // TODO Auto-generated method stub
+                switch(event.getAction()){
+                 case MotionEvent.ACTION_DOWN:
+                     Log.d(TAG, "Start Recording");
+                     MainActivity.startRecording();
+					 messageBtn.setImageResource(R.drawable.recordpressed);
+                     break;
+                 case MotionEvent.ACTION_UP:
+                     Log.d(TAG, "Stop Recording");
+                     MainActivity.stopRecording();
+					 messageBtn.setImageResource(R.drawable.record);
+     				
+     				 File audioFile = new File(MainActivity.recordingOutputFile);
+     				 FileInputStream fileInputStream;
+     				 final byte[] audioData = new byte[(int) audioFile.length()];
+
+     				 try {
+     				 	fileInputStream = new FileInputStream(audioFile);
+     				 	fileInputStream.read(audioData);
+     				 	fileInputStream.close();
+     				 } catch (Exception e) {
+     					e.printStackTrace();
+     				 }
+
+     				 final ParseObject voiceText = new ParseObject("messageData");
+     				 voiceText.put("username", ParseUser.getCurrentUser().get("username"));
+     				 ParseFile dataFile = new ParseFile(audioData);
+     				 try {
+     			 		dataFile.save();
+     		 		} catch (ParseException e) {
+     	 				e.printStackTrace();
+      				}
+      				voiceText.put("data", dataFile);
+      				voiceText.saveInBackground(new SaveCallback() {
+
+     					@Override
+     					public void done(ParseException e) {
+     						sendPush(numberTo, audioData, voiceText.getObjectId());
+     						
+     						//add to local history
+     					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + nameTo + "," + numberTo);
+     					    Date createdAt = voiceText.getCreatedAt();
+     					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss"); //saves voice files in this format
+     					    String formattedDateString = formatter.format(createdAt); 
+     					    //figure out sentflag system to know if sent or received
+     					    File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
+     					    FileOutputStream fos;
+     					    try {
+     					        fos = new FileOutputStream(voiceNote);
+     					        fos.write(audioData);
+     					        fos.flush();
+     					        fos.close();
+     					    } catch (FileNotFoundException e1) {
+     					    	e1.printStackTrace();
+     					    } catch (IOException e1) {
+     					    	e1.printStackTrace();
+     					    }
+     					    
+     					    ArrayList<String> paths = group.getItems().get(0).getPaths();
+     					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
+     					    ArrayList<String> dates = group.getItems().get(0).getDates();
+     					    //add to the front (order n...) to keep newer messages on top
+     					    paths.add(0,voiceNote.getAbsolutePath());
+     					    sentBools.add(0,"sent");
+     					    
+     					    Date dte = voiceText.getCreatedAt();
+     					    SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss MMM d");
+     					    String formattedDateString2 = formatter2.format(dte); 
+     						dates.add(0, formattedDateString2);
+     					    
+     					    group.getItems().get(0).setDates(dates);
+     					    group.getItems().get(0).setPaths(paths);
+     					    group.getItems().get(0).setSentBools(sentBools);
+     					    notifyDataSetChanged();
+       					}
+     				});
+                     break;
+                }
+                return false;
+            }
+        });
+        
+        
+        
+        /*messageBtn.setOnTouchListener(new OnTouchListener() {
 
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
@@ -313,8 +404,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					}
 				});
 			}
-		});
-		messageBtn.setFocusable(false);
+		});*/
         
         return convertView;
     }
