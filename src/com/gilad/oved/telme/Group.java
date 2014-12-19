@@ -6,41 +6,41 @@ import android.graphics.Bitmap;
 
 public class Group {
 	
-	private String Name;
-	private String Number;
-	private Bitmap Picture;
-    private ArrayList<Child> Items;
+	private String name;
+	private String number;
+	private Bitmap picture;
+    private ArrayList<Child> items;
 
     public String getName() {
-        return Name;
+        return name;
     }
 
     public void setName(String name) {
-        this.Name = name;
+        this.name = name;
     }
     
     public String getNumber() {
-        return Number;
+        return number;
     }
 
     public void setNumber(String number) {
-        this.Number = number;
+        this.number = number;
     }
     
     public Bitmap getPicture() {
-    	return this.Picture;
+    	return this.picture;
     }
     
     public void setPicture(Bitmap bmp) {
-    	this.Picture = bmp;
+    	this.picture = bmp;
     }
 
     public ArrayList<Child> getItems() {
-        return Items;
+        return items;
     }
 
     public void setItems(ArrayList<Child> Items) {
-        this.Items = Items;
+        this.items = Items;
     }
 
 }

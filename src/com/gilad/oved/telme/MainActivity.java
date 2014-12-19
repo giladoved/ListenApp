@@ -42,65 +42,56 @@ import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 public class MainActivity extends Activity {
 	
-	ExpandableListAdapter ExpAdapter;
-    ArrayList<Group> ExpListItems;
-    ExpandableListView ExpandList;
+	ExpandableListAdapter listAdapter;
+    ArrayList<Group> listItems;
+    ExpandableListView expandableList;
     
     Button addBtn;
     Button editProfileBtn;
-    public static int profileCheckerCounter;
     
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;    
     ArrayList<Bitmap> friendPictures;   
-    ArrayList<ParseUser> friends;
-    
-    ArrayList<ArrayList<String>> history;
-    
-    private static final int SELECT_PHOTO = 100;
-	public static final String PREFS_NAME = "MyPrefsFile";
-    private static MediaRecorder myAudioRecorder;
-	public static String outputFile = null;
+        
+	private static final String TAG = "ListenApp";
+    private static final int SELECT_PHOTO = 999;
+    private static MediaRecorder mediaRecorder;
+	public static String recordingOutputFile = null;
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-        friends = new ArrayList<ParseUser>();
         friendNicknames = new ArrayList<String>();
         friendNumbers = new ArrayList<String>();
         friendPictures = new ArrayList<Bitmap>();
-        history = new ArrayList<ArrayList<String>>();
         
-		ExpandList = (ExpandableListView) findViewById(R.id.list);
+        expandableList = (ExpandableListView) findViewById(R.id.list);
 		
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
-		outputFile = Environment.getExternalStorageDirectory()
-				.getAbsolutePath() + "/ListenApp/myrecording.3gp";
+		recordingOutputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/recording.3gp";
 		
         //load list of friends names pics and numbers from local
-	    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
 	    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
 	    if (dir.listFiles() != null) {
 	    	for (File f : dir.listFiles()) {
     	    	String[] fileinfo = f.getName().split(",");
-    	    	System.out.println("fileinfo: " + Arrays.toString(fileinfo));
     	    	friendNicknames.add(fileinfo[0]);
-    	    	String num = fileinfo[1].substring(0, fileinfo[1].length()-4);
-    	    	System.out.println("num is : " + num);
+    	    	String num = fileinfo[1].substring(0, fileinfo[1].length()-4); //remove the .jpg part
     	    	friendNumbers.add(num);
     		    Bitmap bmp = BitmapFactory.decodeFile(f.getAbsolutePath());
     		    friendPictures.add(bmp);
 	    	}
 	    }
     	    
-        ExpListItems = SetStandardGroups();
-        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, friendPictures, ExpandList);
-        ExpandList.setAdapter(ExpAdapter);
+	    listItems = setGroupsData();
+        listAdapter = new ExpandableListAdapter(MainActivity.this, listItems, friendNicknames, friendNumbers, friendPictures, expandableList);
+        expandableList.setAdapter(listAdapter);
             
         addBtn = (Button) findViewById(R.id.addBtn);
         addBtn.setOnClickListener(new OnClickListener() {
@@ -108,8 +99,8 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				final Context context = MainActivity.this;
-				LayoutInflater li = LayoutInflater.from(context);
-				View promptsView = li.inflate(R.layout.add_contact, null);
+				LayoutInflater layoutInflater = LayoutInflater.from(context);
+				View promptsView = layoutInflater.inflate(R.layout.add_contact, null);
  
 				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
  				alertDialogBuilder.setView(promptsView);
@@ -122,26 +113,25 @@ public class MainActivity extends Activity {
 					.setPositiveButton("OK",
 					  new DialogInterface.OnClickListener() {
 					    public void onClick(DialogInterface dialog,int id) {
-					    	final String input = userInput.getText().toString().trim();
-					    	System.out.println("intput is : " + input);
-					    	if (!friendNumbers.contains(input)) {
+					    	final String lookingForNumber = userInput.getText().toString().trim();
+					    	if (!friendNumbers.contains(lookingForNumber)) {
 					    	ParseQuery<ParseUser> query = ParseUser.getQuery();
-					    	query.whereEqualTo("username", input);
+					    	query.whereEqualTo("username", lookingForNumber);
 					    	query.getFirstInBackground(new GetCallback<ParseUser>() {
 					    	  public void done(final ParseUser user, ParseException e) {
-					    	    if (user == null) {				    	        	
+					    	      //ask if the user wants to invite the contact if they aren't registered
+					    		  if (user == null) {				    	        	
 				    	        	//http://stackoverflow.com/questions/2478517/how-to-display-a-yes-no-dialog-box-in-android
 				    	        	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 				    	        	    @Override
 				    	        	    public void onClick(DialogInterface dialog, int which) {
-				    	        	        switch (which){
-				    	        	        case DialogInterface.BUTTON_POSITIVE:
-				    	        	        	//shoot them a text message invite
+				    	        	    	if (which == DialogInterface.BUTTON_POSITIVE) {
 				    	        	        	HashMap<String, Object> params = new HashMap<String, Object>();
 				    	        	        	params.put("fromNumber", ParseUser.getCurrentUser().getUsername());
 				    	        	        	params.put("fromName", ParseUser.getCurrentUser().getString("nickname"));
-				    	        	        	params.put("toNumber", input);
-				    	        	        	System.out.println("params are : " + params);
+				    	        	        	params.put("toNumber", lookingForNumber);
+				    	        	        	Log.d(TAG, "invitation params are : " + params);
+				    	        	        	//call cloud function that sends text using twilio
 				    	        	        	ParseCloud.callFunctionInBackground("inviteWithTwilio", params, new FunctionCallback<String>() {
 				    	        	        		  public void done(String result, ParseException e) {
 				    	        	        		    if (e == null) {
@@ -149,12 +139,7 @@ public class MainActivity extends Activity {
 				    	        	        		    }
 				    	        	        		  }
 				    	        	        		});
-				    	        	        	
-				    	        	            break;
-				    	        	        case DialogInterface.BUTTON_NEGATIVE:
-				    	        	        	System.out.println("doesn't want to invite them... :(");
-				    	        	            break;
-				    	        	        }
+				    	        	    	}
 				    	        	    }
 				    	        	};
 
@@ -163,50 +148,45 @@ public class MainActivity extends Activity {
 				    	        	    .setNegativeButton("No", dialogClickListener).show();
 					    	    
 					    	    } else {
-					    	      Log.d("telme", "Retrieved the object.");
-
+					    	    	//add the number to their local friends list
 					    	      friendNumbers.add(user.getUsername());
 					    	      friendNicknames.add(user.getString("nickname"));
 		            			  ParseFile foundPic = user.getParseFile("profilepic");
 		            			  Bitmap bmp = null;
 								  try {
 									  if (foundPic != null) {
-										  System.out.println("found pic is " + foundPic);
 										  bmp = BitmapFactory.decodeByteArray(foundPic.getData(), 0, foundPic.getData().length);
 									  } else {
-										  System.out.println("found pic is the icon biic");
 											bmp = BitmapFactory.decodeResource(context.getResources(),
 									                    R.drawable.userprofile);
 									  }
 			            	     	  friendPictures.add(bmp);
 								  } catch (ParseException e1) {
-							   		  e1.printStackTrace();
+							   		  Log.d(TAG, "exception trying to get the new user's image: " + e1);
 								  }
-								  friends.add(user);
 					    	      
 								  // create new folder for new user...
 								    File dirUser = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + user.getString("nickname") + "," + user.getUsername());
 								    dirUser.mkdirs();
 								  
-								    // See http://stackoverflow.com/questions/3551821/android-write-to-sd-card-folder
+								    //add their picture to the folder of pictures
 								    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
 								    dir.mkdirs();
 								    File pictureFile = new File(dir, user.getString("nickname") + "," + user.getUsername() + ".jpg");
-								    if (pictureFile.exists()) pictureFile.delete(); 
+								    if (pictureFile.exists()) pictureFile.delete(); //allow overriding if they update their picture
 								    try {
 								    	FileOutputStream out = new FileOutputStream(pictureFile);
 								    	bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
 								    	out.flush();
 								    	out.close();
 								    } catch (Exception e1) {
-								    	e1.printStackTrace();
+								   		  Log.d(TAG, "exception trying to write their picture to the disk: " + e1);
 								    }
 								    
-								    
-								  ExpListItems = SetStandardGroups();
-	            			        ExpAdapter = new ExpandableListAdapter(MainActivity.this, ExpListItems, friendNicknames, friendNumbers, friendPictures, ExpandList);
-	            			        ExpandList.setAdapter(ExpAdapter);
-	            			        ExpAdapter.notifyDataSetChanged();
+								    listItems = setGroupsData();
+								    listAdapter = new ExpandableListAdapter(MainActivity.this, listItems, friendNicknames, friendNumbers, friendPictures, expandableList);
+								    expandableList.setAdapter(listAdapter);
+								    listAdapter.notifyDataSetChanged();
 					    	    }
 					    	  }
 					    	});
@@ -229,7 +209,6 @@ public class MainActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				System.out.println("button clicked :)");
 				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
 				photoPickerIntent.setType("image/*");
 				startActivityForResult(photoPickerIntent, SELECT_PHOTO);
@@ -245,7 +224,6 @@ public class MainActivity extends Activity {
         switch(requestCode) { 
         case SELECT_PHOTO:
             if(resultCode == RESULT_OK){  
-            	System.out.println("choossing phooto: " + resultCode);
             	Bitmap selectedImage = null;
             	try {
 					Uri imageUri = imageReturnedIntent.getData();
@@ -256,37 +234,39 @@ public class MainActivity extends Activity {
 				}
 	    	      
             	ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				// Compress image to lower quality scale 1 - 100
-				selectedImage.compress(Bitmap.CompressFormat.PNG, 25, stream);
+				selectedImage.compress(Bitmap.CompressFormat.PNG, 25, stream); //compresses the image by 75%
 				byte[] image = stream.toByteArray();
 				ParseFile file = new ParseFile(image);
 				file.saveInBackground();
 				
                 ParseUser.getCurrentUser().put("profilepic", file);
-                ParseUser.getCurrentUser().saveInBackground();
-				Toast.makeText(getApplicationContext(), "Updated the profile", Toast.LENGTH_SHORT).show();
+                ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+					
+					@Override
+					public void done(ParseException arg0) {
+						if (arg0 == null)
+							Toast.makeText(getApplicationContext(), "Updated the profile", Toast.LENGTH_SHORT).show();
+					}
+				});
             }
         }
     }
-    
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return true;
-    }  
-    
+
+    //don't let the users go back
     @Override
 	public void onBackPressed() {
 	}
     
-    public static void start() {
-		myAudioRecorder = new MediaRecorder();
-		myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-		myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-		myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
-		myAudioRecorder.setOutputFile(outputFile);
+    //start recording
+    public static void startRecording() {
+    	mediaRecorder = new MediaRecorder();
+    	mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+    	mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+    	mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+    	mediaRecorder.setOutputFile(recordingOutputFile);
 		try {
-			myAudioRecorder.prepare();
-			myAudioRecorder.start();
+			mediaRecorder.prepare();
+			mediaRecorder.start();
 		} catch (IllegalStateException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -294,18 +274,19 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	public static void stop() {
+    //stop the recording
+	public static void stopRecording() {
 		try {
-			myAudioRecorder.stop();
+			mediaRecorder.stop();
 		} catch (IllegalStateException e) {
 			System.out.println("E is: ----- " + e.getLocalizedMessage());
 		}
-		myAudioRecorder.reset();
-		myAudioRecorder.release();
-		myAudioRecorder = null;
+		mediaRecorder.reset();
+		mediaRecorder.release();
+		mediaRecorder = null;
 	}
     
-	public ArrayList<Group> SetStandardGroups() {
+	public ArrayList<Group> setGroupsData() {
         ArrayList<String> dates = new ArrayList<String>();
         ArrayList<String> sentBools = new ArrayList<String>();
         ArrayList<String> paths = new ArrayList<String>();

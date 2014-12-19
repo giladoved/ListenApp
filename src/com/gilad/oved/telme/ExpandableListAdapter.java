@@ -52,7 +52,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     private Context context;
     private ArrayList<Group> groups;
     
-	boolean firstTouch = true;
+	boolean firstTouch = true; //to check if button is being held or not
 	ListView historyList;
 		
     ArrayList<String> friendNicknames;
@@ -98,13 +98,14 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			public void onClick(View v) {
         		//remove local user file
 			    File userFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(groupPosition) + "," + friendNumbers.get(groupPosition));
-        		System.out.println("userfile dir is : "+ userFile.getAbsolutePath());
         	    String[] children = userFile.list();
+        	    //have to delete all contents of folder before deleting folder
         	    for (int i = 0; i < children.length; i++) {
         	    	new File(userFile, children[i]).delete();
         	    }
 			    boolean deleted = userFile.delete();
 			    
+			    //remove local user profile picture
 			    File userPicFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/" + friendNicknames.get(groupPosition) + "," + friendNumbers.get(groupPosition) + ".jpg");
 			    boolean pictureDeleted = userPicFile.delete();
         		if (deleted && pictureDeleted) {
@@ -126,11 +127,10 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			@Override
 			public void onClick(View v) {
 				Toast.makeText(context, "History Cleared", Toast.LENGTH_SHORT).show();
-				//delete local history
 				File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(groupPosition) + "," + friendNumbers.get(groupPosition));
 			    if (dir.listFiles() != null) {
 			    	for (File f : dir.listFiles()) {
-			    		if (!f.getName().contains("jpg"))
+			    		if (!f.getName().contains("jpg")) //delete everything except the profile picture
 			    			f.delete();
 			    	}
 			    }
@@ -140,16 +140,14 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 				notifyDataSetChanged();
 			}
 		});
-        
-		System.out.println("child is :" + child);
-		
+        		
 		historyList = (ListView) convertView.findViewById(R.id.historyListView);
-		final SimpleArrayAdapter adapter = new SimpleArrayAdapter(context, android.R.layout.simple_list_item_1, child.getDates());
+		final SimpleArrayAdapter adapter = new SimpleArrayAdapter(context, R.layout.simplest_list_item_1, child.getDates());
 		historyList.setAdapter(adapter);
 		historyList.setOnTouchListener(new OnTouchListener() {
 		    @Override
 		    public boolean onTouch(View v, MotionEvent event) {
-		        // disallow the onTouch for your scrollable parent view 
+		    	//fixes nested scrolling bug
 		        v.getParent().requestDisallowInterceptTouchEvent(true);
 		        return false;
 		    }
@@ -159,19 +157,16 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int pos, long arg3) {
 				File file = new File(child.getPaths().get(pos)); // acquire the file from path string
-				System.out.println("trying to play: " + file.getName());
 				MediaPlayer mediaPlayer = new MediaPlayer();
 				mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 				try {
 					mediaPlayer.setDataSource(file.getAbsolutePath());
 					mediaPlayer.prepare();
 				} catch (IllegalStateException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
-				} // might take long! (for buffering, etc)
+				} 
 				mediaPlayer.start();
 			}			
 		});
@@ -232,9 +227,8 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if (event.getAction()==MotionEvent.ACTION_DOWN) {
-	            	System.out.println("TOUCH!!: down");
-					if (firstTouch) {
-						MainActivity.start();
+					if (firstTouch) { //as soon as the button is first pressed, start the recording
+						MainActivity.startRecording();
 						messageBtn.setImageResource(R.drawable.recordpressed);
 					}
 					firstTouch = false;
@@ -249,12 +243,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 			@Override
 			public void onClick(View v) {
-				System.out.println("touch up......");
-				System.out.println("walkie talkie noise goes here!!! : " + nameTo);
-				MainActivity.stop();
-				firstTouch = true;
+				MainActivity.stopRecording();
 				
-				File audioFile = new File(MainActivity.outputFile);
+				File audioFile = new File(MainActivity.recordingOutputFile);
 				FileInputStream fileInputStream;
 				final byte[] audioData = new byte[(int) audioFile.length()];
 
@@ -279,43 +270,37 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 					@Override
 					public void done(ParseException e) {
-						System.out.println("walkie talkie noise goes here!!!"
-								+ nameTo);
 						sendPush(numberTo, audioData, voiceText.getObjectId());
 						
 						//add to local history
 					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + nameTo + "," + numberTo);
 					    Date createdAt = voiceText.getCreatedAt();
-					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss"); //saves voice files in this format
 					    String formattedDateString = formatter.format(createdAt); 
+					    //figure out sentflag system to know if sent or received
 					    File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
-					    System.out.println("saving here: " + voiceNote.getAbsolutePath());
 					    FileOutputStream fos;
 					    try {
-					    	System.out.println("new stream");
 					        fos = new FileOutputStream(voiceNote);
 					        fos.write(audioData);
-					    	System.out.println("fos wrote the adata: " + audioData[0]);
 					        fos.flush();
 					        fos.close();
 					    } catch (FileNotFoundException e1) {
-					    	System.out.println("e1: "+ e1);
-					        // handle exception
+					    	e1.printStackTrace();
 					    } catch (IOException e1) {
-					    	System.out.println("e11:" + e1);
-					        // handle exception
+					    	e1.printStackTrace();
 					    }
 					    
 					    ArrayList<String> paths = group.getItems().get(0).getPaths();
 					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
 					    ArrayList<String> dates = group.getItems().get(0).getDates();
+					    //add to the front (order n...) to keep newer messages on top
 					    paths.add(0,voiceNote.getAbsolutePath());
 					    sentBools.add(0,"sent");
 					    
 					    Date dte = voiceText.getCreatedAt();
 					    SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss MMM d");
 					    String formattedDateString2 = formatter2.format(dte); 
-						System.out.println("formated dateStr is :" + formattedDateString2);
 						dates.add(0, formattedDateString2);
 					    
 					    group.getItems().get(0).setDates(dates);
@@ -324,10 +309,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					    notifyDataSetChanged();
 					    
 						messageBtn.setImageResource(R.drawable.record);
+						firstTouch = true;
 					}
 				});
-				
-				firstTouch = true;
 			}
 		});
 		messageBtn.setFocusable(false);
@@ -337,13 +321,12 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
     public void sendMessage(String target, byte[] dataBytes) {
 		try {
-			System.out.println("audioDATA: " + dataBytes.length);
 			ParseQuery<ParseInstallation> query = ParseInstallation.getQuery();
 			query.whereEqualTo("username", target);
 			ParsePush push = new ParsePush();
 			push.setQuery(query);
 
-			long dayInterval = 60 * 60 * 24; // 24 hrs
+			long dayInterval = 60 * 60 * 24; // 24 hrs expiration limit
 
 			String base64Data = Base64.encodeToString(dataBytes,
 					Base64.NO_PADDING);
@@ -352,26 +335,17 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					+ base64Data
 					+ "\",\"alert\": \"Message from "
 					+ ParseUser.getCurrentUser().getUsername() + "\"}";
-			System.out.println("data----" + dataStr);
 			JSONObject data = new JSONObject(dataStr);
 			push.setData(data);
 			push.setExpirationTimeInterval(dayInterval);
-			push.sendInBackground(new SendCallback() {
-
-				@Override
-				public void done(ParseException e) {
-					System.out.println("play walkie talkie sound - " + e);
-					// play walkie talkie sound!
-				}
-			});
+			push.sendInBackground();
 		} catch (JSONException e) {
-
+			e.printStackTrace();
 		}
 	}
     
 	public void sendPush(String target, byte[] dataBytes, String objID) {
 		try {
-			System.out.println("audioDATA: " + dataBytes.length);
 			ParseQuery<ParseInstallation> query = ParseInstallation.getQuery();
 			query.whereEqualTo("username", target);
 			ParsePush push = new ParsePush();
@@ -382,22 +356,15 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					+ ParseUser.getCurrentUser().getUsername()
 					+ "\",\"fromName\":\""
 					+ ParseUser.getCurrentUser().get("nickname") 
-					+ "\",\"idid\":\"" + objID
+					+ "\",\"idid\":\"" + objID   //id is probably reserved... (change name later, idid is rediclous)
 					+ "\",\"alert\": \"Message from "
 					+ ParseUser.getCurrentUser().getUsername() + "\"}";
-			System.out.println("data STRRRRRRRR : " + dataStr);
 			JSONObject data = new JSONObject(dataStr);
 			push.setData(data);
 			push.setExpirationTimeInterval(dayInterval);
-			push.sendInBackground(new SendCallback() {
-
-				@Override
-				public void done(ParseException e) {
-					System.out.println("play walkie talkie sound - " + e);
-				}
-			});
+			push.sendInBackground();
 		} catch (JSONException e) {
-
+			e.printStackTrace();
 		}
 	}
 
@@ -410,8 +377,6 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     public boolean isChildSelectable(int groupPosition, int childPosition) {
         return true;
     }
-    
-    
     
     
     private class SimpleArrayAdapter extends ArrayAdapter<String> {

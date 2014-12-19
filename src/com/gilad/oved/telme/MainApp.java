@@ -7,10 +7,12 @@ import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseInstallation;
 import com.parse.ParsePush;
-import com.parse.ParseUser;
+import com.parse.PushService;
 import com.parse.SaveCallback;
 
 public class MainApp extends Application {
+	private static final String TAG = "ListenApp";
+	
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -19,14 +21,17 @@ public class MainApp extends Application {
 			  @Override
 			  public void done(ParseException e) {
 			    if (e == null) {
-			    	System.out.println("funziona!");
-			      Log.d("com.parse.push", "successfully subscribed to the broadcast channel.");
+			      Log.d(TAG, "successfully subscribed to the broadcast channel.");
 			    } else {
-			    	System.out.println("ma che cazzo e' successo??: " + e);
-			      Log.e("com.parse.push", "failed to subscribe for push", e);
+			      Log.e(TAG, "failed to subscribe for push with errror: ", e);
 			    }
 			  }
 		});
-		ParseInstallation.getCurrentInstallation().saveInBackground();
+		ParseInstallation.getCurrentInstallation().saveInBackground(new SaveCallback() {
+			@Override
+			public void done(ParseException arg0) {
+				Log.d(TAG, "saved installation with error: " + arg0);
+			}
+		});
 	}
 }

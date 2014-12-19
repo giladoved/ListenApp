@@ -33,7 +33,7 @@
     android:name="com.gilad.oved.telme.permission.C2D_MESSAGE" />
 <uses-permission android:name="com.gilad.oved.telme.permission.C2D_MESSAGE" />
     <application
-        android:name="MainApp"
+        android:name="com.gilad.oved.telme.MainApp"
         android:allowBackup="true"
         android:icon="@drawable/icon"
         android:label="ListenApp"
@@ -43,7 +43,6 @@
             android:label="ListenApp" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -83,14 +82,9 @@
                 <action android:name="com.parse.push.intent.RECEIVE" />
                 <action android:name="com.parse.push.intent.DELETE" />
                 <action android:name="com.parse.push.intent.OPEN" />
+                <action android:name="com.gilad.oved.holdandtalk.PLAY_MESSAGE" />
             </intent-filter>
         </receiver>
-        
-        <receiver android:name="com.gilad.oved.telme.CustomReceiver" android:exported="false">
-  			<intent-filter>
-   				<action android:name="com.gilad.oved.holdandtalk.PLAY_MESSAGE" />
- 		    </intent-filter>
-		</receiver>
         <meta-data android:name="com.parse.push.notification_icon" android:resource="@drawable/icon"/>
     </application>
 

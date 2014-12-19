@@ -31,6 +31,7 @@ public class Register extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_register);
 
+		//get the phone number that the user entered from the last screen
 		Intent intent = getIntent();
 		number = intent.getStringExtra("number");
 
@@ -53,12 +54,14 @@ public class Register extends Activity {
 	
 	public void register(String code) throws Exception {
 		code = code.trim();
+		//hardcoded activation code... improve later
 		if (code.equalsIgnoreCase("47303")) {
-			ParseUser user = new ParseUser();
+			ParseUser user = new ParseUser(); 
 			if (number != null) {
 				user.setUsername(number);
 				user.setPassword(number);
 				user.put("nickname", nicknameTxt.getText().toString().trim());
+				//change to loading wheel soon
 				Toast.makeText(getApplicationContext(), "Loading...", Toast.LENGTH_SHORT).show();
 				user.signUpInBackground(new SignUpCallback() {
 					@Override
@@ -68,9 +71,16 @@ public class Register extends Activity {
 									.getCurrentInstallation();
 							installation.put("user",ParseUser.getCurrentUser());
 							installation.put("username",number);
-							installation.saveInBackground();
+							installation.saveInBackground(new SaveCallback() {
+								
+								@Override
+								public void done(ParseException arg0) {
+									if (arg0 == null) {
+										Toast.makeText(getApplicationContext(), "All set and ready to go!", Toast.LENGTH_LONG).show();
+									}
+								}
+							});
 							
-							Toast.makeText(getApplicationContext(), "All set and ready to go!", Toast.LENGTH_LONG).show();
 							Intent intent = new Intent(Register.this, MainActivity.class);
 							Register.this.startActivity(intent);
 						} else {
@@ -85,26 +95,9 @@ public class Register extends Activity {
 		}
 	}
 	
+	//don't let the users go back
 	@Override
 	public void onBackPressed() {
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.register, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
+		
 	}
 }

@@ -1219,7 +1219,8 @@ containing a value of this type.
         public static final int add_contact=0x7f03001b;
         public static final int child_item=0x7f03001c;
         public static final int group_item=0x7f03001d;
-        public static final int support_simple_spinner_dropdown_item=0x7f03001e;
+        public static final int simplest_list_item_1=0x7f03001e;
+        public static final int support_simple_spinner_dropdown_item=0x7f03001f;
     }
     public static final class menu {
         public static final int login=0x7f0d0000;
@@ -1228,6 +1229,7 @@ containing a value of this type.
     }
     public static final class raw {
         public static final int ding=0x7f050000;
+        public static final int ding2=0x7f050001;
     }
     public static final class string {
         /**  Content description for the action bar "home" affordance. [CHAR LIMIT=NONE] 
