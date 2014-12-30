@@ -90,7 +90,7 @@ byte[] data;
 					            	Date createdAt = foundVoice.getCreatedAt();
 								    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
 								    String formattedDateString = formatter.format(createdAt); 
-					            	File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
+					            	File voiceNote = new File(dir, formattedDateString + ",got.aac"); //received flag, create an enum for flags
 								    System.out.println("location of stirng will be: " + voiceNote.getAbsolutePath());
 								    FileOutputStream fos;
 								    try {
@@ -103,7 +103,6 @@ byte[] data;
 								    } catch (IOException e1) {
 								        // handle exception
 								    }
-								 
 								    
 									mp.setOnCompletionListener(new OnCompletionListener() {
 										

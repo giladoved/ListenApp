@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +48,6 @@ import com.parse.ParsePush;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
-import com.parse.SendCallback;
 
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
 	private static final String TAG = "ListenApp";
@@ -274,7 +274,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
      					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss"); //saves voice files in this format
      					    String formattedDateString = formatter.format(createdAt); 
      					    //figure out sentflag system to know if sent or received
-     					    File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
+     					    File voiceNote = new File(dir, formattedDateString + ",sent.aac");
      					    FileOutputStream fos;
      					    try {
      					        fos = new FileOutputStream(voiceNote);
@@ -286,6 +286,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
      					    } catch (IOException e1) {
      					    	e1.printStackTrace();
      					    }
+     					    
+     					    Log.d(TAG, "before group items: " + group.getItems());
+     					    Log.d(TAG, "before group items: " + group.getItems().get(0).getDates());
      					    
      					    ArrayList<String> paths = group.getItems().get(0).getPaths();
      					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
@@ -299,6 +302,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
      					    String formattedDateString2 = formatter2.format(dte); 
      						dates.add(0, formattedDateString2);
      					    
+     						Log.d(TAG, "after group items: " + group.getItems());
+     						Log.d(TAG, "after group items: " + group.getItems().get(0).getDates());
+     					    
      					    group.getItems().get(0).setDates(dates);
      					    group.getItems().get(0).setPaths(paths);
      					    group.getItems().get(0).setSentBools(sentBools);
@@ -310,101 +316,6 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                 return false;
             }
         });
-        
-        
-        
-        /*messageBtn.setOnTouchListener(new OnTouchListener() {
-
-			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				if (event.getAction()==MotionEvent.ACTION_DOWN) {
-					if (firstTouch) { //as soon as the button is first pressed, start the recording
-						MainActivity.startRecording();
-						messageBtn.setImageResource(R.drawable.recordpressed);
-					}
-					firstTouch = false;
-					
-					return false;
-				}
-	            return false;
-			}
-
-		});
-        messageBtn.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				MainActivity.stopRecording();
-				
-				File audioFile = new File(MainActivity.recordingOutputFile);
-				FileInputStream fileInputStream;
-				final byte[] audioData = new byte[(int) audioFile.length()];
-
-				try {
-					fileInputStream = new FileInputStream(audioFile);
-					fileInputStream.read(audioData);
-					fileInputStream.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
-				final ParseObject voiceText = new ParseObject("messageData");
-				voiceText.put("username", ParseUser.getCurrentUser().get("username"));
-				ParseFile dataFile = new ParseFile(audioData);
-				try {
-					dataFile.save();
-				} catch (ParseException e) {
-					e.printStackTrace();
-				}
-				voiceText.put("data", dataFile);
-				voiceText.saveInBackground(new SaveCallback() {
-
-					@Override
-					public void done(ParseException e) {
-						sendPush(numberTo, audioData, voiceText.getObjectId());
-						
-						//add to local history
-					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + nameTo + "," + numberTo);
-					    Date createdAt = voiceText.getCreatedAt();
-					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss"); //saves voice files in this format
-					    String formattedDateString = formatter.format(createdAt); 
-					    //figure out sentflag system to know if sent or received
-					    File voiceNote = new File(dir, formattedDateString + ",sentflag.aac");
-					    FileOutputStream fos;
-					    try {
-					        fos = new FileOutputStream(voiceNote);
-					        fos.write(audioData);
-					        fos.flush();
-					        fos.close();
-					    } catch (FileNotFoundException e1) {
-					    	e1.printStackTrace();
-					    } catch (IOException e1) {
-					    	e1.printStackTrace();
-					    }
-					    
-					    ArrayList<String> paths = group.getItems().get(0).getPaths();
-					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
-					    ArrayList<String> dates = group.getItems().get(0).getDates();
-					    //add to the front (order n...) to keep newer messages on top
-					    paths.add(0,voiceNote.getAbsolutePath());
-					    sentBools.add(0,"sent");
-					    
-					    Date dte = voiceText.getCreatedAt();
-					    SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss MMM d");
-					    String formattedDateString2 = formatter2.format(dte); 
-						dates.add(0, formattedDateString2);
-					    
-					    group.getItems().get(0).setDates(dates);
-					    group.getItems().get(0).setPaths(paths);
-					    group.getItems().get(0).setSentBools(sentBools);
-					    notifyDataSetChanged();
-					    
-						messageBtn.setImageResource(R.drawable.record);
-						firstTouch = true;
-					}
-				});
-			}
-		});*/
         
         return convertView;
     }
@@ -446,7 +357,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					+ ParseUser.getCurrentUser().getUsername()
 					+ "\",\"fromName\":\""
 					+ ParseUser.getCurrentUser().get("nickname") 
-					+ "\",\"idid\":\"" + objID   //id is probably reserved... (change name later, idid is rediclous)
+					+ "\",\"idid\":\"" + objID   //id is probably reserved... (change name later, idid is whack)
 					+ "\",\"alert\": \"Message from "
 					+ ParseUser.getCurrentUser().getUsername() + "\"}";
 			JSONObject data = new JSONObject(dataStr);

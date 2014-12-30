@@ -295,11 +295,7 @@ public class MainActivity extends Activity {
 		mediaRecorder = null;
 	}
     
-	public ArrayList<Group> setGroupsData() {
-        ArrayList<String> dates = new ArrayList<String>();
-        ArrayList<String> sentBools = new ArrayList<String>();
-        ArrayList<String> paths = new ArrayList<String>();
-        
+	public ArrayList<Group> setGroupsData() {        
         ArrayList<Child> ch_list = new ArrayList<Child>();
         ArrayList<Group> list = new ArrayList<Group>();
         int counter = 0;
@@ -310,17 +306,23 @@ public class MainActivity extends Activity {
 			gru.setNumber(friendNumbers.get(counter));
 			gru.setPicture(friendPictures.get(counter));
 			
+	        ArrayList<String> dates = new ArrayList<String>();
+	        ArrayList<String> sentBools = new ArrayList<String>();
+	        ArrayList<String> paths = new ArrayList<String>();
+			
 			ch_list = new ArrayList<Child>();
 			Child ch = new Child();
 			
+			Log.d(TAG, "counter: " + counter + "  friendNum: " + friendNumbers.get(counter) + "  groupname" + group_name);
 		    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(counter) + "," + friendNumbers.get(counter));
 		    File[] files = dir.listFiles();
 		    Arrays.sort(files, new Comparator<File>(){
-		        public int compare(File f1, File f2)
-		        {
+		        public int compare(File f1, File f2) {
 		            return -Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
-		        } });
-		    
+		        } 
+		    });
+			Log.d(TAG, counter + ")) sorted files: " + Arrays.toString(files));
+		    		    
 		    if (files != null) {
 		    	for (File f : files) {
 					if (!f.getName().contains("jpg")) {
@@ -345,6 +347,8 @@ public class MainActivity extends Activity {
 		    	}
 		    }
 		    
+		    System.out.println(counter + ") the dates are set to " + dates);
+		    Log.d(TAG, counter + ") the dates are set to " + dates);
 			ch.setDates(dates);
 			ch.setSentBools(sentBools);
 			ch.setPaths(paths);
