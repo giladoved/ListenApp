@@ -103,10 +103,7 @@ byte[] data;
 								    } catch (IOException e1) {
 								        // handle exception
 								    }
-								    
-									Intent pupInt = new Intent(context, MainActivity.class);
-									pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-									context.getApplicationContext().startActivity(pupInt);
+								 
 								    
 									mp.setOnCompletionListener(new OnCompletionListener() {
 										
@@ -138,7 +135,7 @@ byte[] data;
 		}
   }
   
-  private void playSoundData(byte[] soundBytes, Context context) {
+  private void playSoundData(byte[] soundBytes, final Context context) {
 	    try {
 	    	//http://stackoverflow.com/questions/1972027/android-playing-mp3-from-byte	
  	    	File tempAudio = File.createTempFile("tempSound", "3gp", context.getCacheDir());
@@ -155,6 +152,15 @@ byte[] data;
 
 	        mediaPlayer.prepare();
 	        mediaPlayer.start();
+	        mediaPlayer.setOnCompletionListener(new OnCompletionListener() {
+				
+				@Override
+				public void onCompletion(MediaPlayer mp) {
+					Intent pupInt = new Intent(context, MainActivity.class);
+					pupInt.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					context.getApplicationContext().startActivity(pupInt);
+				}
+			});
 	        System.out.println("playing data sound");
 	    } catch (IOException ex) {
 	        ex.printStackTrace();

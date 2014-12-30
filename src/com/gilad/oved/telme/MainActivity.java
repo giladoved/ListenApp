@@ -15,6 +15,7 @@ import java.util.HashMap;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -25,14 +26,15 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.parse.FunctionCallback;
@@ -61,7 +63,9 @@ public class MainActivity extends Activity {
     private static final int SELECT_PHOTO = 999;
     private static MediaRecorder mediaRecorder;
 	public static String recordingOutputFile = null;
-
+	
+	ProgressDialog progress;
+	
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -72,7 +76,7 @@ public class MainActivity extends Activity {
         friendPictures = new ArrayList<Bitmap>();
         
         expandableList = (ExpandableListView) findViewById(R.id.list);
-		
+                
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		recordingOutputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/recording.3gp";
 		
@@ -107,12 +111,14 @@ public class MainActivity extends Activity {
  
 				final EditText userInput = (EditText) promptsView
 						.findViewById(R.id.addNumberTxt);
+				userInput.setInputType(InputType.TYPE_CLASS_PHONE);
 
 				alertDialogBuilder
 					.setCancelable(false)
 					.setPositiveButton("OK",
 					  new DialogInterface.OnClickListener() {
 					    public void onClick(DialogInterface dialog,int id) {
+					        progress = ProgressDialog.show(context, "Loading...", "");
 					    	final String lookingForNumber = userInput.getText().toString().trim();
 					    	if (!friendNumbers.contains(lookingForNumber)) {
 					    	ParseQuery<ParseUser> query = ParseUser.getQuery();
@@ -120,6 +126,7 @@ public class MainActivity extends Activity {
 					    	query.getFirstInBackground(new GetCallback<ParseUser>() {
 					    	  public void done(final ParseUser user, ParseException e) {
 					    	      //ask if the user wants to invite the contact if they aren't registered
+					    		  progress.dismiss();
 					    		  if (user == null) {				    	        	
 				    	        	//http://stackoverflow.com/questions/2478517/how-to-display-a-yes-no-dialog-box-in-android
 				    	        	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -224,6 +231,7 @@ public class MainActivity extends Activity {
         switch(requestCode) { 
         case SELECT_PHOTO:
             if(resultCode == RESULT_OK){  
+		        progress = ProgressDialog.show(this, "Loading...", "");
             	Bitmap selectedImage = null;
             	try {
 					Uri imageUri = imageReturnedIntent.getData();
@@ -244,6 +252,7 @@ public class MainActivity extends Activity {
 					
 					@Override
 					public void done(ParseException arg0) {
+						progress.dismiss();
 						if (arg0 == null)
 							Toast.makeText(getApplicationContext(), "Updated the profile", Toast.LENGTH_SHORT).show();
 					}

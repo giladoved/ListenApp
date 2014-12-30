@@ -89,10 +89,6 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 									data = f.getData();
 									System.out.println("we made it " + data);
 									
-									Intent i = new Intent(context, MainActivity.class);
-									i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
-									context.getApplicationContext().startActivity(i);
-									
 									mp.setOnCompletionListener(new OnCompletionListener() {
 										
 										@Override
@@ -124,7 +120,7 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 		}
 	}
 
-	private void playSoundData(byte[] soundBytes, Context context) {
+	private void playSoundData(byte[] soundBytes, final Context context) {
 		try {
 			// http://stackoverflow.com/questions/1972027/android-playing-mp3-from-byte
 			File tempAudio = File.createTempFile("tempSound", "3gp",
@@ -141,6 +137,15 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 
 			mediaPlayer.prepare();
 			mediaPlayer.start();
+			mediaPlayer.setOnCompletionListener(new OnCompletionListener() {
+				
+				@Override
+				public void onCompletion(MediaPlayer mp) {
+					Intent i = new Intent(context, MainActivity.class);
+					i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
+					context.getApplicationContext().startActivity(i);
+				}
+			});
 			System.out.println("playing data sound");
 		} catch (IOException ex) {
 			ex.printStackTrace();
