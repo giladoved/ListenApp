@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -18,10 +19,10 @@ import com.parse.SignUpCallback;
 
 public class Register extends Activity {
 
-	Button submitBtn;
-	EditText activationCodeTxt;
-	EditText nicknameTxt;
-	String number;
+	private Button submitBtn;
+	private EditText activationCodeTxt;
+	private EditText nicknameTxt;
+	private String number;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,13 +44,13 @@ public class Register extends Activity {
 				try {
 					register(activationCodeTxt.getText().toString().trim());
 				} catch (Exception e) {
-					e.printStackTrace();
+					Log.e(Constants.TAG, e.getLocalizedMessage());
 				}
 			}
 		});
 	}
 	
-	public void register(String code) throws Exception {
+	private void register(String code) throws Exception {
 		code = code.trim();
 		//hardcoded activation code... improve later
 		if (code.equalsIgnoreCase("47303")) {
@@ -81,10 +82,7 @@ public class Register extends Activity {
 							Intent intent = new Intent(Register.this, MainActivity.class);
 							Register.this.startActivity(intent);
 						} else {
-							AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getApplicationContext());
-							AlertDialog dialog = alertDialogBuilder.create();
-							dialog.setMessage(e.getMessage());
-							dialog.show();
+							Log.e(Constants.TAG, e.getLocalizedMessage());
 						}
 					}
 				});

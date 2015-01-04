@@ -51,18 +51,17 @@ import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
-	private static final String TAG = "ListenApp";
     private Context context;
     private ArrayList<Group> groups;
     
-	ListView historyList;
+	private ListView historyList;
 		
-    ArrayList<String> friendNicknames;
-    ArrayList<String> friendNumbers;
-    ArrayList<Bitmap> friendPictures;
+    private ArrayList<String> friendNicknames;
+    private ArrayList<String> friendNumbers;
+    private ArrayList<Bitmap> friendPictures;
     
-    boolean isRecording = false;
-    long pressedTime;
+    private boolean isRecording = false;
+    private long pressedTime;
     
     public ExpandableListAdapter(Context context, ArrayList<Group> groups, ArrayList<String> nicknames, ArrayList<String> numbers, ArrayList<Bitmap> pictures, ExpandableListView listView) {
         this.context = context;
@@ -162,19 +161,19 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			@Override
 			public void onItemClick(AdapterView<?> av, View v, int pos, long arg3) {
 				File file = new File(child.getPaths().get(pos)); // acquire the file from path string
-				MediaPlayer mediaPlayer = new MediaPlayer();
+				final MediaPlayer mediaPlayer = new MediaPlayer();
 				mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 				try {
 					mediaPlayer.setDataSource(file.getAbsolutePath());
 					mediaPlayer.prepare();
+					mediaPlayer.start();
 				} catch (IllegalStateException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
 					e.printStackTrace();
 				} 
-				mediaPlayer.start();
 			}			
-		});
+		}); 
 
         return convertView;
     }
@@ -235,7 +234,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
             	CountDownTimer timeCounter;
                 switch(event.getAction()){
                  case MotionEvent.ACTION_DOWN:
-                     Log.d(TAG, "Start Recording");
+                     Log.d(Constants.TAG, "Start Recording");
 					if (!isRecording) {
 						MainActivity.startRecording();
 						isRecording = true;
@@ -244,7 +243,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 					}
                      break;
                  case MotionEvent.ACTION_UP:
-                     Log.d(TAG, "Stop Recording");
+                     Log.d(Constants.TAG, "Stop Recording");
   					 messageBtn.setImageResource(R.drawable.record);
 
                      //wait a second after releasing the button
@@ -256,8 +255,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                            isRecording = false;
            					long currentTime = System.currentTimeMillis();
                            
-                           if (currentTime - pressedTime > 2000) { //messages must be at least 1 second long
-                        	   Log.d(TAG, "long enough to send");
+                           if (currentTime - pressedTime > 1000 + Constants.MINIMUM_RECORDING_LENGTH) { //messages must be at least 1 second long
                         	   File audioFile = new File(MainActivity.recordingOutputFile);
                  				 FileInputStream fileInputStream;
                  				 final byte[] audioData = new byte[(int) audioFile.length()];
@@ -267,7 +265,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                  				 	fileInputStream.read(audioData);
                  				 	fileInputStream.close();
                  				 } catch (Exception e) {
-                 					e.printStackTrace();
+                 					Log.e(Constants.TAG, e.getLocalizedMessage());
                  				 }
 
                  				 final ParseObject voiceText = new ParseObject("messageData");
@@ -276,7 +274,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                  				 try {
                  			 		dataFile.save();
                  		 		} catch (ParseException e) {
-                 	 				e.printStackTrace();
+                 		 			Log.e(Constants.TAG, e.getLocalizedMessage());
                   				}
                   				voiceText.put("data", dataFile);
                   				voiceText.saveInBackground(new SaveCallback() {
@@ -290,8 +288,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                  					    Date createdAt = voiceText.getCreatedAt();
                  					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss"); //saves voice files in this format
                  					    String formattedDateString = formatter.format(createdAt); 
-                 					    //figure out sentflag system to know if sent or received
-                 					    File voiceNote = new File(dir, formattedDateString + ",sent.aac");
+                 					    File voiceNote = new File(dir, formattedDateString + "," + Constants.SENT_FLAG + ".aac");
                  					    FileOutputStream fos;
                  					    try {
                  					        fos = new FileOutputStream(voiceNote);
@@ -299,9 +296,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                  					        fos.flush();
                  					        fos.close();
                  					    } catch (FileNotFoundException e1) {
-                 					    	e1.printStackTrace();
+                 					    	Log.e(Constants.TAG, e1.getLocalizedMessage());
                  					    } catch (IOException e1) {
-                 					    	e1.printStackTrace();
+                 					    	Log.e(Constants.TAG, e1.getLocalizedMessage());
                  					    }
                  					    
                  					    ArrayList<String> paths = group.getItems().get(0).getPaths();
@@ -324,7 +321,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
                   				});
                            } 
                        }
-                     }, 1000);
+                     }, Constants.MILLISECONDS_AFTER_RELEASE);
                      break;
                 }
                 return false;
@@ -355,7 +352,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			push.setExpirationTimeInterval(dayInterval);
 			push.sendInBackground();
 		} catch (JSONException e) {
-			e.printStackTrace();
+			Log.e(Constants.TAG, e.getLocalizedMessage());
 		}
 	}
     
@@ -369,9 +366,9 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			long dayInterval = 60 * 60 * 24; // 24 hrs
 			String dataStr = "{\"action\": \"com.gilad.oved.holdandtalk.PLAY_MESSAGE\",\"from\":\""
 					+ ParseUser.getCurrentUser().getUsername()
-					+ "\",\"fromName\":\""
+					+ "\",\"from_name\":\""
 					+ ParseUser.getCurrentUser().get("nickname") 
-					+ "\",\"idid\":\"" + objID   //id is probably reserved... (change name later, idid is whack)
+					+ "\",\"message_id\":\"" + objID  
 					+ "\",\"alert\": \"Message from "
 					+ ParseUser.getCurrentUser().getUsername() + "\"}";
 			JSONObject data = new JSONObject(dataStr);
@@ -379,7 +376,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 			push.setExpirationTimeInterval(dayInterval);
 			push.sendInBackground();
 		} catch (JSONException e) {
-			e.printStackTrace();
+			Log.e(Constants.TAG, e.getLocalizedMessage());
 		}
 	}
 

@@ -30,42 +30,32 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 
 public class CustomReceiver extends BroadcastReceiver {
-private static final String TAG = "CustomReceiver";
  
-String fromUsername;
-String fromNickname;
-byte[] data;
+	private String fromUsername;
+	private String fromNickname;
+	private byte[] data;
 
   @Override
   public void onReceive(final Context context, Intent intent) {
 	  try {
-			if (intent == null)
-			{
-				System.out.println("Receiver intent null");
-			}
-			else
-			{   
+			if (intent != null) { 
 				final MediaPlayer mp = MediaPlayer.create(context, R.raw.ding2);
 			    mp.start();
 				
-				System.out.println("RECEIVED A MESSAGE!!");
 				String action = intent.getAction();
-				System.out.println("got action " + action);
 				if (action.equals("com.gilad.oved.holdandtalk.PLAY_MESSAGE"))
 				{
-					String channel = intent.getExtras().getString("com.parse.Channel");
 					JSONObject json = new JSONObject(intent.getExtras().getString("com.parse.Data"));
 
-					Log.d(TAG, "got action " + action + " on channel " + channel + " with:");
 					Iterator itr = json.keys();
 					while (itr.hasNext()) {
 						String key = (String) itr.next();
 						if (key.equals("from")) {
 						      fromUsername = json.getString("from");
-						} else if (key.equals("fromName")) {
-							fromNickname = json.getString("fromName");
+						} else if (key.equals("from_name")) {
+							fromNickname = json.getString("from_name");
 						}
-						Log.d(TAG, "..." + key + " => " + json.getString(key));
+						Log.d(Constants.TAG, "..." + key + " => " + json.getString(key));
 					}
 					
 					ParseQuery<ParseObject> query = ParseQuery.getQuery("messageData");
@@ -77,20 +67,15 @@ byte[] data;
 						public void done(List<ParseObject> results, ParseException e) {
 				            if (e == null) {
 				            	ParseObject foundVoice = results.get(0);
-				            	System.out.println("foundVoice" + foundVoice);
 				            	ParseFile f = (ParseFile)foundVoice.get("data");
-				            	System.out.println("f is " + f);
 				            	try {
-									data = f.getData();
-								    System.out.println("we made it " + data);
-								    
 					            	//add to local file history too!
+				            		data = f.getData();								    
 					            	File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + fromNickname + "," + fromUsername);
 					            	Date createdAt = foundVoice.getCreatedAt();
 								    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
 								    String formattedDateString = formatter.format(createdAt); 
-					            	File voiceNote = new File(dir, formattedDateString + ",got.aac"); //received flag, create an enum for flags
-								    System.out.println("location of stirng will be: " + voiceNote.getAbsolutePath());
+					            	File voiceNote = new File(dir, formattedDateString + "," + Constants.RECEIVED_FLAG + ".aac"); 
 								    FileOutputStream fos;
 								    try {
 								        fos = new FileOutputStream(voiceNote);
@@ -98,9 +83,9 @@ byte[] data;
 								        fos.flush();
 								        fos.close();
 								    } catch (FileNotFoundException e1) {
-								        // handle exception
+								    	Log.e(Constants.TAG, e1.getLocalizedMessage());
 								    } catch (IOException e1) {
-								        // handle exception
+								    	Log.e(Constants.TAG, e1.getLocalizedMessage());
 								    }
 								    
 									mp.setOnCompletionListener(new OnCompletionListener() {
@@ -117,11 +102,11 @@ byte[] data;
 										}
 									});
 								} catch (ParseException e1) {
-									e1.printStackTrace();
+									Log.e(Constants.TAG, e1.getLocalizedMessage());
 								}
 				            	
 				            } else {
-				                Log.d("Error", "Error: " + e.getMessage());
+				                Log.e(Constants.TAG, e.getMessage());
 				            }
 				        }
 				    });
@@ -129,7 +114,7 @@ byte[] data;
 			}
 
 		} catch (JSONException e) {
-			Log.d(TAG, "JSONException: " + e.getMessage());
+			Log.e(Constants.TAG, e.getMessage());
 		}
   }
   
@@ -146,8 +131,6 @@ byte[] data;
 	        FileInputStream fis = new FileInputStream(tempAudio);
 	        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 	        mediaPlayer.setDataSource(fis.getFD());
-	        mediaPlayer.setVolume(1.0f, 1.0f);
-
 	        mediaPlayer.prepare();
 	        mediaPlayer.start();
 	        mediaPlayer.setOnCompletionListener(new OnCompletionListener() {
@@ -159,7 +142,7 @@ byte[] data;
 					context.getApplicationContext().startActivity(pupInt);
 				}
 			});
-	        System.out.println("playing data sound");
+	        Log.v(Constants.TAG, "playing data sound");
 	    } catch (IOException ex) {
 	        ex.printStackTrace();
 	    }

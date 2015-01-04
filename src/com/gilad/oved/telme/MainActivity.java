@@ -22,6 +22,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaRecorder;
+import android.media.MediaRecorder.OnErrorListener;
+import android.media.MediaRecorder.OnInfoListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -33,7 +35,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
@@ -49,20 +50,19 @@ import com.parse.SaveCallback;
 
 public class MainActivity extends ActionBarActivity {
 	
-	ExpandableListAdapter listAdapter;
-    ArrayList<Group> listItems;
-    ExpandableListView expandableList;
+	private ExpandableListAdapter listAdapter;
+	private ArrayList<Group> listItems;
+	private ExpandableListView expandableList;
     
-    ArrayList<String> friendNicknames;
-    ArrayList<String> friendNumbers;    
-    ArrayList<Bitmap> friendPictures;   
+	private ArrayList<String> friendNicknames;
+	private ArrayList<String> friendNumbers;    
+	private ArrayList<Bitmap> friendPictures;   
         
-	private static final String TAG = "ListenApp";
-    private static final int SELECT_PHOTO = 999;
+	private static final int SELECT_PHOTO = 999;
     private static MediaRecorder mediaRecorder;
-	public static String recordingOutputFile = null;
+    public static String recordingOutputFile = null;
 	
-	ProgressDialog progress;
+    private ProgressDialog progress;
 	
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +95,7 @@ public class MainActivity extends ActionBarActivity {
         expandableList.setAdapter(listAdapter);
 	}
     
-    public void addNewContact() {
+    private void addNewContact() {
 		final Context context = MainActivity.this;
 		LayoutInflater layoutInflater = LayoutInflater.from(context);
 		View promptsView = layoutInflater.inflate(R.layout.add_contact, null);
@@ -131,14 +131,14 @@ public class MainActivity extends ActionBarActivity {
 		    	        	        	params.put("fromNumber", ParseUser.getCurrentUser().getUsername());
 		    	        	        	params.put("fromName", ParseUser.getCurrentUser().getString("nickname"));
 		    	        	        	params.put("toNumber", lookingForNumber);
-		    	        	        	Log.d(TAG, "invitation params are : " + params);
+		    	        	        	Log.v(Constants.TAG, "invitation params are : " + params);
 		    	        	        	//call cloud function that sends text using twilio
 		    	        	        	ParseCloud.callFunctionInBackground("inviteWithTwilio", params, new FunctionCallback<String>() {
 		    	        	        		  public void done(String result, ParseException e) {
 		    	        	        		    if (e == null) {
 		    	        	        		    	Toast.makeText(getApplicationContext(), "Your SMS invitation has been sent!", Toast.LENGTH_SHORT).show();
 		    	        	        		    } else {
-		    	        	        		    	showError(e.getMessage());
+		    	        	        		    	Log.e(Constants.TAG, e.getLocalizedMessage());
 		    	        	        		    }
 		    	        	        		  }
 		    	        	        		});
@@ -164,8 +164,7 @@ public class MainActivity extends ActionBarActivity {
 							  }
 	            	     	  friendPictures.add(bmp);
 						  } catch (ParseException e1) {
-							  showError(e1.getMessage());
-					   		  Log.d(TAG, "exception trying to get the new user's image: " + e1);
+					   		  Log.e(Constants.TAG, e1.getLocalizedMessage());
 						  }
 			    	      
 						  // create new folder for new user...
@@ -183,8 +182,7 @@ public class MainActivity extends ActionBarActivity {
 						    	out.flush();
 						    	out.close();
 						    } catch (Exception e1) {
-						    	showError(e1.getMessage());
-						   		  Log.d(TAG, "exception trying to write their picture to the disk: " + e1);
+						   		  Log.e(Constants.TAG, e1.getLocalizedMessage());
 						    }
 						    
 						    listItems = setGroupsData();
@@ -221,8 +219,7 @@ public class MainActivity extends ActionBarActivity {
 					InputStream imageStream = getContentResolver().openInputStream(imageUri);
 					selectedImage = BitmapFactory.decodeStream(imageStream);
 				} catch (FileNotFoundException e) {
-					e.printStackTrace(); 
-					showError(e.getMessage());
+					Log.e(Constants.TAG, e.getLocalizedMessage());
 				}
 	    	      
             	ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -235,10 +232,12 @@ public class MainActivity extends ActionBarActivity {
                 ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
 					
 					@Override
-					public void done(ParseException arg0) {
+					public void done(ParseException e) {
 						progress.dismiss();
-						if (arg0 == null)
+						if (e == null)
 							Toast.makeText(getApplicationContext(), "Updated the profile", Toast.LENGTH_SHORT).show();
+						else
+							Log.e(Constants.TAG, e.getLocalizedMessage());
 					}
 				});
             }
@@ -251,11 +250,11 @@ public class MainActivity extends ActionBarActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.optionsmenu, menu);
         inflater.inflate(R.menu.actionbar, menu);
-        
         return true;
     }
     
     //detect options menu click
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
     	switch (item.getItemId()) {
     	case R.id.editProfilePicture:
@@ -284,13 +283,46 @@ public class MainActivity extends ActionBarActivity {
     	mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
     	mediaRecorder.setOutputFile(recordingOutputFile);
     	mediaRecorder.setMaxDuration(1000 * 60 * 5);
+    	mediaRecorder.setOnInfoListener(new OnInfoListener() {
+			
+			@Override
+			public void onInfo(MediaRecorder mr, int what, int extra) {
+				switch (what) {
+				case MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN:
+					Log.d(Constants.TAG, "MEDIA_RECORDER_INFO_UNKNOWN");
+					break;
+				case MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED:
+					Log.d(Constants.TAG, "MEDIA_RECORDER_INFO_MAX_DURATION_REACHED");
+					break;
+				case MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED:
+					Log.d(Constants.TAG, "MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED");
+					break;
+				}
+			}
+		});
+    	
+    	mediaRecorder.setOnErrorListener(new OnErrorListener() {
+			
+			@Override
+			public void onError(MediaRecorder mr, int what, int extra) {
+				switch (what) {
+				case MediaRecorder.MEDIA_ERROR_SERVER_DIED:
+					Log.e(Constants.TAG, "MEDIA_ERROR_SERVER_DIED");
+					break;
+				case MediaRecorder.MEDIA_RECORDER_ERROR_UNKNOWN:
+					Log.e(Constants.TAG, "MEDIA_RECORDER_ERROR_UNKNOWN");
+					break;
+				}
+			}
+		});
+    	
 		try {
 			mediaRecorder.prepare();
 			mediaRecorder.start();
 		} catch (IllegalStateException e) {
-			e.printStackTrace();
+			Log.e(Constants.TAG, e.getLocalizedMessage());
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(Constants.TAG, e.getLocalizedMessage());
 		}
 	}
 
@@ -298,17 +330,17 @@ public class MainActivity extends ActionBarActivity {
 	public static void stopRecording() {
 		try {
 			mediaRecorder.stop();
+			mediaRecorder.reset();
+			mediaRecorder.release();
+			mediaRecorder = null;
 		} catch (IllegalStateException e) {
-			System.out.println("E is: ----- " + e.getLocalizedMessage());
+			Log.e(Constants.TAG, e.getLocalizedMessage());
 		} catch(RuntimeException e){
-			System.out.println("E is: ----- " + e.getLocalizedMessage());
+			Log.e(Constants.TAG, e.getLocalizedMessage());
 		}
-		mediaRecorder.reset();
-		mediaRecorder.release();
-		mediaRecorder = null;
 	}
     
-	public ArrayList<Group> setGroupsData() {        
+	private ArrayList<Group> setGroupsData() {        
         ArrayList<Child> ch_list = new ArrayList<Child>();
         ArrayList<Group> list = new ArrayList<Group>();
         int counter = 0;
@@ -345,8 +377,7 @@ public class MainActivity extends ActionBarActivity {
 						try {
 							convertedDate = dateFormat.parse(dateStr);
 						} catch (java.text.ParseException e) {
-							showError(e.getMessage());
-							e.printStackTrace();
+							Log.e(Constants.TAG, e.getLocalizedMessage());
 						}
 						
 					    SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss MMM d");
@@ -372,17 +403,4 @@ public class MainActivity extends ActionBarActivity {
 		return list;
 	}
 	
-	public void showError(String message) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(message)
-			   .setTitle("Error!")
-		       .setCancelable(false)
-		       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-		           public void onClick(DialogInterface dialog, int id) {
-		        	   //do nothing
-		           }
-		       });
-		AlertDialog alert = builder.create();
-		alert.show();
-	}
 }

@@ -26,45 +26,32 @@ import com.parse.ParseQuery;
 
 public class CustomRec extends ParsePushBroadcastReceiver {
 
-	String fromUsername;
-	String fromNickname;
-	String messageId;
-	byte[] data;
+	private String fromUsername;
+	private String messageId;
+	private byte[] data;
 	
 	@Override
     public void onPushOpen(final Context context, final Intent intent) {
-        Log.e("Push", "Clicked!!!!");
         try {
-			if (intent == null)
-			{
-				System.out.println("Receiver intent null");
-			}
-			else
-			{   
+			if (intent != null) {   
 				final MediaPlayer mp = MediaPlayer.create(context, R.raw.ding2);
 			    mp.start();
 				
-				System.out.println("RECEIVED A MESSAGE!!");
 				String action = intent.getAction();
-				System.out.println("got action " + action);
-				String channel = intent.getExtras().getString("com.parse.Channel");
 				JSONObject json = new JSONObject(intent.getExtras().getString("com.parse.Data"));
 
-				Log.d("nice", "got action " + action + " on channel " + channel + " with:");
 				Iterator itr = json.keys();
 				while (itr.hasNext()) {
 					String key = (String) itr.next();
 					if (key.equals("from")) {
 						fromUsername = json.getString("from");
-					} else if (key.equals("idid")) {
-						messageId = json.getString("idid");
+					} else if (key.equals("message_id")) {
+						messageId = json.getString("message_id");
 					}
-					Log.d("nice", "..." + key + " = > " + json.getString(key));
+					Log.d(Constants.TAG, "..." + key + " = > " + json.getString(key));
 				}
 
 				if (fromUsername != null && fromUsername.length() > 0) {
-					System.out.println("username!!! exists ----> " + fromUsername);
-					System.out.println("message id is : " + messageId);
 					ParseQuery<ParseObject> query = ParseQuery
 							.getQuery("messageData");
 					query.whereEqualTo("username", fromUsername);
@@ -77,14 +64,10 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 								ParseException e) {
 							if (e == null) {
 								ParseObject foundVoice = results.get(0);
-								System.out.println("foundVoice" + foundVoice);
 								ParseFile f = (ParseFile) foundVoice
 										.get("data");
-								System.out.println("f is " + f);
 								try {
 									data = f.getData();
-									System.out.println("we made it " + data);
-									
 									mp.setOnCompletionListener(new OnCompletionListener() {
 										
 										@Override
@@ -102,17 +85,17 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 									e1.printStackTrace();
 								}
 							} else {
-								Log.d("Error", "Error: " + e.getMessage());
+								Log.e(Constants.TAG, "Error: " + e.getMessage());
 							}
 						}
 					});
 				} else  {
-					System.out.println("username does not exists ----> " + action);
+					Log.e(Constants.TAG, "username does not exists ----> " + action);
 				}
 			}
 
 		} catch (JSONException e) {
-			Log.d("nice", "JSONException: " + e.getMessage());
+			Log.e(Constants.TAG, "JSONException: " + e.getMessage());
 		}
 	}
 
@@ -129,8 +112,6 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 			MediaPlayer mediaPlayer = new MediaPlayer();
 			FileInputStream fis = new FileInputStream(tempAudio);
 			mediaPlayer.setDataSource(fis.getFD());
-			mediaPlayer.setVolume(1.0f, 1.0f);
-
 			mediaPlayer.prepare();
 			mediaPlayer.start();
 			mediaPlayer.setOnCompletionListener(new OnCompletionListener() {
@@ -142,9 +123,9 @@ public class CustomRec extends ParsePushBroadcastReceiver {
 					context.getApplicationContext().startActivity(i);
 				}
 			});
-			System.out.println("playing data sound");
+	        Log.v(Constants.TAG, "playing data sound");
 		} catch (IOException ex) {
-			ex.printStackTrace();
+			Log.e(Constants.TAG, ex.getLocalizedMessage());
 		}
 	}
 }

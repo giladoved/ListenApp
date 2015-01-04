@@ -19,11 +19,9 @@ import com.parse.ParseUser;
 import com.parse.SendCallback;
 
 public class Login extends Activity implements OnClickListener {
-	private static final String TAG = "ListenApp";
 	
-	Button nextBtn;
-	EditText phoneNumberTxt;
-	Handler handler;
+	private Button nextBtn;
+	private EditText phoneNumberTxt;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -49,9 +47,9 @@ public class Login extends Activity implements OnClickListener {
 	public void onBackPressed() {
 	}
 	
-	public void sendCodeTo(String number) {
+	private void sendCodeTo(String number) {
 		try {
-			Log.d(TAG, "sending message to: " + number);
+			Log.v(Constants.TAG, "sending message to: " + number);
 			ParsePush push = new ParsePush();
 			push.setChannel("Gilad" + ParseInstallation.getCurrentInstallation().getInstallationId());
 			push.setMessage("47303 - your activation code to register for ListenApp");
