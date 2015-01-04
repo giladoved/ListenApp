@@ -13,7 +13,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -26,15 +25,17 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v7.app.ActionBarActivity;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.parse.FunctionCallback;
@@ -46,14 +47,11 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
-public class MainActivity extends Activity {
+public class MainActivity extends ActionBarActivity {
 	
 	ExpandableListAdapter listAdapter;
     ArrayList<Group> listItems;
     ExpandableListView expandableList;
-    
-    Button addBtn;
-    Button editProfileBtn;
     
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;    
@@ -74,7 +72,6 @@ public class MainActivity extends Activity {
         friendNicknames = new ArrayList<String>();
         friendNumbers = new ArrayList<String>();
         friendPictures = new ArrayList<Bitmap>();
-        
         expandableList = (ExpandableListView) findViewById(R.id.list);
                 
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -96,136 +93,119 @@ public class MainActivity extends Activity {
 	    listItems = setGroupsData();
         listAdapter = new ExpandableListAdapter(MainActivity.this, listItems, friendNicknames, friendNumbers, friendPictures, expandableList);
         expandableList.setAdapter(listAdapter);
-            
-        addBtn = (Button) findViewById(R.id.addBtn);
-        addBtn.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				final Context context = MainActivity.this;
-				LayoutInflater layoutInflater = LayoutInflater.from(context);
-				View promptsView = layoutInflater.inflate(R.layout.add_contact, null);
- 
-				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
- 				alertDialogBuilder.setView(promptsView);
- 
-				final EditText userInput = (EditText) promptsView
-						.findViewById(R.id.addNumberTxt);
-				userInput.setInputType(InputType.TYPE_CLASS_PHONE);
-
-				alertDialogBuilder
-					.setCancelable(false)
-					.setPositiveButton("OK",
-					  new DialogInterface.OnClickListener() {
-					    public void onClick(DialogInterface dialog,int id) {
-					        progress = ProgressDialog.show(context, "Loading...", "");
-					    	final String lookingForNumber = userInput.getText().toString().trim();
-					    	if (!friendNumbers.contains(lookingForNumber)) {
-					    	ParseQuery<ParseUser> query = ParseUser.getQuery();
-					    	query.whereEqualTo("username", lookingForNumber);
-					    	query.getFirstInBackground(new GetCallback<ParseUser>() {
-					    	  public void done(final ParseUser user, ParseException e) {
-					    	      //ask if the user wants to invite the contact if they aren't registered
-					    		  progress.dismiss();
-					    		  if (user == null) {				    	        	
-				    	        	//http://stackoverflow.com/questions/2478517/how-to-display-a-yes-no-dialog-box-in-android
-				    	        	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-				    	        	    @Override
-				    	        	    public void onClick(DialogInterface dialog, int which) {
-				    	        	    	if (which == DialogInterface.BUTTON_POSITIVE) {
-				    	        	        	HashMap<String, Object> params = new HashMap<String, Object>();
-				    	        	        	params.put("fromNumber", ParseUser.getCurrentUser().getUsername());
-				    	        	        	params.put("fromName", ParseUser.getCurrentUser().getString("nickname"));
-				    	        	        	params.put("toNumber", lookingForNumber);
-				    	        	        	Log.d(TAG, "invitation params are : " + params);
-				    	        	        	//call cloud function that sends text using twilio
-				    	        	        	ParseCloud.callFunctionInBackground("inviteWithTwilio", params, new FunctionCallback<String>() {
-				    	        	        		  public void done(String result, ParseException e) {
-				    	        	        		    if (e == null) {
-				    	        	        		    	Toast.makeText(getApplicationContext(), "Your SMS invitation has been sent!", Toast.LENGTH_SHORT).show();
-				    	        	        		    } else {
-				    	        	        		    	showError(e.getMessage());
-				    	        	        		    }
-				    	        	        		  }
-				    	        	        		});
-				    	        	    	}
-				    	        	    }
-				    	        	};
-
-				    	        	AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-				    	        	builder.setMessage(userInput.getText().toString().trim() + " is not a registered number. Would you like to invite them to use ListenApp?").setPositiveButton("Yes", dialogClickListener)
-				    	        	    .setNegativeButton("No", dialogClickListener).show();
-					    	    
-					    	    } else {
-					    	    	//add the number to their local friends list
-					    	      friendNumbers.add(user.getUsername());
-					    	      friendNicknames.add(user.getString("nickname"));
-		            			  ParseFile foundPic = user.getParseFile("profilepic");
-		            			  Bitmap bmp = null;
-								  try {
-									  if (foundPic != null) {
-										  bmp = BitmapFactory.decodeByteArray(foundPic.getData(), 0, foundPic.getData().length);
-									  } else {
-											bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.userprofile);
-									  }
-			            	     	  friendPictures.add(bmp);
-								  } catch (ParseException e1) {
-									  showError(e1.getMessage());
-							   		  Log.d(TAG, "exception trying to get the new user's image: " + e1);
-								  }
-					    	      
-								  // create new folder for new user...
-								    File dirUser = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + user.getString("nickname") + "," + user.getUsername());
-								    dirUser.mkdirs();
-								  
-								    //add their picture to the folder of pictures
-								    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
-								    dir.mkdirs();
-								    File pictureFile = new File(dir, user.getString("nickname") + "," + user.getUsername() + ".jpg");
-								    if (pictureFile.exists()) pictureFile.delete(); //allow overriding if they update their picture
-								    try {
-								    	FileOutputStream out = new FileOutputStream(pictureFile);
-								    	bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
-								    	out.flush();
-								    	out.close();
-								    } catch (Exception e1) {
-								    	showError(e1.getMessage());
-								   		  Log.d(TAG, "exception trying to write their picture to the disk: " + e1);
-								    }
-								    
-								    listItems = setGroupsData();
-								    listAdapter = new ExpandableListAdapter(MainActivity.this, listItems, friendNicknames, friendNumbers, friendPictures, expandableList);
-								    expandableList.setAdapter(listAdapter);
-								    listAdapter.notifyDataSetChanged();
-					    	    }
-					    	  }
-					    	});
-					    }
-					    }
-					  })
-					.setNegativeButton("Cancel",
-					  new DialogInterface.OnClickListener() {
-					    public void onClick(DialogInterface dialog,int id) {
-						dialog.cancel();
-					    }
-					  });
-
-				alertDialogBuilder.create().show();
-			}
-		});
-        
-        editProfileBtn = (Button) findViewById(R.id.editProfile);
-        editProfileBtn.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-				photoPickerIntent.setType("image/*");
-				startActivityForResult(photoPickerIntent, SELECT_PHOTO);
-			}
-		}); 
-		
 	}
+    
+    public void addNewContact() {
+		final Context context = MainActivity.this;
+		LayoutInflater layoutInflater = LayoutInflater.from(context);
+		View promptsView = layoutInflater.inflate(R.layout.add_contact, null);
+
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+			alertDialogBuilder.setView(promptsView);
+
+		final EditText userInput = (EditText) promptsView
+				.findViewById(R.id.addNumberTxt);
+		userInput.setInputType(InputType.TYPE_CLASS_PHONE);
+
+		alertDialogBuilder
+			.setCancelable(false)
+			.setPositiveButton("OK",
+			  new DialogInterface.OnClickListener() {
+			    public void onClick(DialogInterface dialog,int id) {
+			        progress = ProgressDialog.show(context, "Loading...", "");
+			    	final String lookingForNumber = userInput.getText().toString().trim();
+			    	if (!friendNumbers.contains(lookingForNumber)) {
+			    	ParseQuery<ParseUser> query = ParseUser.getQuery();
+			    	query.whereEqualTo("username", lookingForNumber);
+			    	query.getFirstInBackground(new GetCallback<ParseUser>() {
+			    	  public void done(final ParseUser user, ParseException e) {
+			    	      //ask if the user wants to invite the contact if they aren't registered
+			    		  progress.dismiss();
+			    		  if (user == null) {				    	        	
+		    	        	//http://stackoverflow.com/questions/2478517/how-to-display-a-yes-no-dialog-box-in-android
+		    	        	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+		    	        	    @Override
+		    	        	    public void onClick(DialogInterface dialog, int which) {
+		    	        	    	if (which == DialogInterface.BUTTON_POSITIVE) {
+		    	        	        	HashMap<String, Object> params = new HashMap<String, Object>();
+		    	        	        	params.put("fromNumber", ParseUser.getCurrentUser().getUsername());
+		    	        	        	params.put("fromName", ParseUser.getCurrentUser().getString("nickname"));
+		    	        	        	params.put("toNumber", lookingForNumber);
+		    	        	        	Log.d(TAG, "invitation params are : " + params);
+		    	        	        	//call cloud function that sends text using twilio
+		    	        	        	ParseCloud.callFunctionInBackground("inviteWithTwilio", params, new FunctionCallback<String>() {
+		    	        	        		  public void done(String result, ParseException e) {
+		    	        	        		    if (e == null) {
+		    	        	        		    	Toast.makeText(getApplicationContext(), "Your SMS invitation has been sent!", Toast.LENGTH_SHORT).show();
+		    	        	        		    } else {
+		    	        	        		    	showError(e.getMessage());
+		    	        	        		    }
+		    	        	        		  }
+		    	        	        		});
+		    	        	    	}
+		    	        	    }
+		    	        	};
+
+		    	        	AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+		    	        	builder.setMessage(userInput.getText().toString().trim() + " is not a registered number. Would you like to invite them to use ListenApp?").setPositiveButton("Yes", dialogClickListener)
+		    	        	    .setNegativeButton("No", dialogClickListener).show();
+			    	    
+			    	    } else {
+			    	    	//add the number to their local friends list
+			    	      friendNumbers.add(user.getUsername());
+			    	      friendNicknames.add(user.getString("nickname"));
+            			  ParseFile foundPic = user.getParseFile("profilepic");
+            			  Bitmap bmp = null;
+						  try {
+							  if (foundPic != null) {
+								  bmp = BitmapFactory.decodeByteArray(foundPic.getData(), 0, foundPic.getData().length);
+							  } else {
+									bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.userprofile);
+							  }
+	            	     	  friendPictures.add(bmp);
+						  } catch (ParseException e1) {
+							  showError(e1.getMessage());
+					   		  Log.d(TAG, "exception trying to get the new user's image: " + e1);
+						  }
+			    	      
+						  // create new folder for new user...
+						    File dirUser = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + user.getString("nickname") + "," + user.getUsername());
+						    dirUser.mkdirs();
+						  
+						    //add their picture to the folder of pictures
+						    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/");
+						    dir.mkdirs();
+						    File pictureFile = new File(dir, user.getString("nickname") + "," + user.getUsername() + ".jpg");
+						    if (pictureFile.exists()) pictureFile.delete(); //allow overriding if they update their picture
+						    try {
+						    	FileOutputStream out = new FileOutputStream(pictureFile);
+						    	bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
+						    	out.flush();
+						    	out.close();
+						    } catch (Exception e1) {
+						    	showError(e1.getMessage());
+						   		  Log.d(TAG, "exception trying to write their picture to the disk: " + e1);
+						    }
+						    
+						    listItems = setGroupsData();
+						    listAdapter = new ExpandableListAdapter(MainActivity.this, listItems, friendNicknames, friendNumbers, friendPictures, expandableList);
+						    expandableList.setAdapter(listAdapter);
+						    listAdapter.notifyDataSetChanged();
+			    	    }
+			    	  }
+			    	});
+			    }
+			    }
+			  })
+			.setNegativeButton("Cancel",
+			  new DialogInterface.OnClickListener() {
+			    public void onClick(DialogInterface dialog,int id) {
+				dialog.cancel();
+			    }
+			  });
+
+		alertDialogBuilder.create().show();
+    }
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) { 
@@ -263,6 +243,32 @@ public class MainActivity extends Activity {
 				});
             }
         }
+    }
+    
+    //options menu and action bar menu
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.optionsmenu, menu);
+        inflater.inflate(R.menu.actionbar, menu);
+        
+        return true;
+    }
+    
+    //detect options menu click
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	switch (item.getItemId()) {
+    	case R.id.editProfilePicture:
+			Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+			photoPickerIntent.setType("image/*");
+			startActivityForResult(photoPickerIntent, SELECT_PHOTO);
+    		return true;
+    	case R.id.addNewContact:
+    		addNewContact();
+    		return true;
+    	default:
+    		return super.onOptionsItemSelected(item);
+    	}
     }
 
     //don't let the users go back

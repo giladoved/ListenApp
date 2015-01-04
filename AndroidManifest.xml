@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="8"
-        android:targetSdkVersion="8" />
+        android:targetSdkVersion="18" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -17,6 +17,7 @@
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     
 <!--
   IMPORTANT: Change "com.parse.tutorials.pushnotifications.permission.C2D_MESSAGE" in the lines below
@@ -29,8 +30,7 @@
         android:name="com.gilad.oved.telme.MainApp"
         android:allowBackup="true"
         android:icon="@drawable/icon"
-        android:label="ListenApp"
-        android:theme="@style/AppTheme" >
+        android:label="ListenApp" >
         <activity
             android:name="com.gilad.oved.telme.Login"
             android:label="ListenApp" >
@@ -41,6 +41,7 @@
         </activity>
         <activity
             android:name="com.gilad.oved.telme.MainActivity"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
             android:label="ListenApp" >
         </activity>
         <activity

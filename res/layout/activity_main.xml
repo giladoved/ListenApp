@@ -5,39 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity" >
-    
- <RelativeLayout
-     android:id="@+id/relativeLayout"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
-
-            <Button
-                android:id="@+id/addBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="20dp"
-                android:minHeight="24dp"
-                android:textSize="10sp"
-                android:text="Add Contact"
-                android:textAlignment="center" />
-
-        <Button
-            android:id="@+id/editProfile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:minHeight="24dp"
-            android:padding="20dp"
-            android:text="Edit Profile"
-            android:textSize="10sp" />
-
-    </RelativeLayout>
+    tools:context=".MainActivity" >       
 
     <ExpandableListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent" >
+        android:layout_height="fill_parent" 
+        android:layout_marginTop="20dp">
     </ExpandableListView>
 
 </LinearLayout>

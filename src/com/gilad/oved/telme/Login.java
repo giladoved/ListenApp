@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -40,6 +39,8 @@ public class Login extends Activity implements OnClickListener {
     		Intent intent = new Intent(Login.this, MainActivity.class);
     		Login.this.startActivity(intent);
     		finish();
+		} else {
+			createShortcut();
 		}
 	}
 
@@ -78,6 +79,19 @@ public class Login extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		String number = phoneNumberTxt.getText().toString().trim();
 		sendCodeTo(number);
+	}
+	
+	private void createShortcut() {
+	    Intent shortcutIntent = new Intent(getApplicationContext(), Login.class);
+	    shortcutIntent.setAction(Intent.ACTION_MAIN);
+
+	    Intent addIntent = new Intent();
+	    addIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+	    addIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, "ListenApp");
+	    addIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE,
+	            Intent.ShortcutIconResource.fromContext(getApplicationContext(), R.drawable.icon));
+	    addIntent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+	    getApplicationContext().sendBroadcast(addIntent);
 	}
 
 }

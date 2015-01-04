@@ -20,6 +20,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -61,6 +62,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     ArrayList<Bitmap> friendPictures;
     
     boolean isRecording = false;
+    long pressedTime;
     
     public ExpandableListAdapter(Context context, ArrayList<Group> groups, ArrayList<String> nicknames, ArrayList<String> numbers, ArrayList<Bitmap> pictures, ExpandableListView listView) {
         this.context = context;
@@ -238,78 +240,91 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 						MainActivity.startRecording();
 						isRecording = true;
 						messageBtn.setImageResource(R.drawable.recordpressed);
+			            pressedTime = System.currentTimeMillis();
 					}
                      break;
                  case MotionEvent.ACTION_UP:
                      Log.d(TAG, "Stop Recording");
-                     MainActivity.stopRecording();
-                     isRecording = false;
-					 messageBtn.setImageResource(R.drawable.record);
-     				
-     				 File audioFile = new File(MainActivity.recordingOutputFile);
-     				 FileInputStream fileInputStream;
-     				 final byte[] audioData = new byte[(int) audioFile.length()];
+  					 messageBtn.setImageResource(R.drawable.record);
 
-     				 try {
-     				 	fileInputStream = new FileInputStream(audioFile);
-     				 	fileInputStream.read(audioData);
-     				 	fileInputStream.close();
-     				 } catch (Exception e) {
-     					e.printStackTrace();
-     				 }
+                     //wait a second after releasing the button
+                     final Handler handler = new Handler();
+                     handler.postDelayed(new Runnable() {
+                       @Override
+                       public void run() {
+                    	   MainActivity.stopRecording();
+                           isRecording = false;
+           					long currentTime = System.currentTimeMillis();
+                           
+                           if (currentTime - pressedTime > 2000) { //messages must be at least 1 second long
+                        	   Log.d(TAG, "long enough to send");
+                        	   File audioFile = new File(MainActivity.recordingOutputFile);
+                 				 FileInputStream fileInputStream;
+                 				 final byte[] audioData = new byte[(int) audioFile.length()];
 
-     				 final ParseObject voiceText = new ParseObject("messageData");
-     				 voiceText.put("username", ParseUser.getCurrentUser().get("username"));
-     				 ParseFile dataFile = new ParseFile(audioData);
-     				 try {
-     			 		dataFile.save();
-     		 		} catch (ParseException e) {
-     	 				e.printStackTrace();
-      				}
-      				voiceText.put("data", dataFile);
-      				voiceText.saveInBackground(new SaveCallback() {
+                 				 try {
+                 				 	fileInputStream = new FileInputStream(audioFile);
+                 				 	fileInputStream.read(audioData);
+                 				 	fileInputStream.close();
+                 				 } catch (Exception e) {
+                 					e.printStackTrace();
+                 				 }
 
-     					@Override
-     					public void done(ParseException e) {
-     						sendPush(numberTo, audioData, voiceText.getObjectId());
-     						
-     						//add to local history
-     					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + nameTo + "," + numberTo);
-     					    Date createdAt = voiceText.getCreatedAt();
-     					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss"); //saves voice files in this format
-     					    String formattedDateString = formatter.format(createdAt); 
-     					    //figure out sentflag system to know if sent or received
-     					    File voiceNote = new File(dir, formattedDateString + ",sent.aac");
-     					    FileOutputStream fos;
-     					    try {
-     					        fos = new FileOutputStream(voiceNote);
-     					        fos.write(audioData);
-     					        fos.flush();
-     					        fos.close();
-     					    } catch (FileNotFoundException e1) {
-     					    	e1.printStackTrace();
-     					    } catch (IOException e1) {
-     					    	e1.printStackTrace();
-     					    }
-     					    
-     					    ArrayList<String> paths = group.getItems().get(0).getPaths();
-     					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
-     					    ArrayList<String> dates = group.getItems().get(0).getDates();
-     					    //add to the front (order n...) to keep newer messages on top
-     					    paths.add(0,voiceNote.getAbsolutePath());
-     					    sentBools.add(0,"sent");
-     					    
-     					    Date dte = voiceText.getCreatedAt();
-     					    SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss MMM d");
-     					    String formattedDateString2 = formatter2.format(dte); 
-     						dates.add(0, formattedDateString2);
-     					    
-     					    group.getItems().get(0).setDates(dates);
-     					    group.getItems().get(0).setPaths(paths);
-     					    group.getItems().get(0).setSentBools(sentBools);
-     					    notifyDataSetChanged();
-       					}
-     				});
+                 				 final ParseObject voiceText = new ParseObject("messageData");
+                 				 voiceText.put("username", ParseUser.getCurrentUser().get("username"));
+                 				 ParseFile dataFile = new ParseFile(audioData);
+                 				 try {
+                 			 		dataFile.save();
+                 		 		} catch (ParseException e) {
+                 	 				e.printStackTrace();
+                  				}
+                  				voiceText.put("data", dataFile);
+                  				voiceText.saveInBackground(new SaveCallback() {
+
+                 					@Override
+                 					public void done(ParseException e) {
+                 						sendPush(numberTo, audioData, voiceText.getObjectId());
+                 						
+                 						//add to local history
+                 					    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + nameTo + "," + numberTo);
+                 					    Date createdAt = voiceText.getCreatedAt();
+                 					    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss"); //saves voice files in this format
+                 					    String formattedDateString = formatter.format(createdAt); 
+                 					    //figure out sentflag system to know if sent or received
+                 					    File voiceNote = new File(dir, formattedDateString + ",sent.aac");
+                 					    FileOutputStream fos;
+                 					    try {
+                 					        fos = new FileOutputStream(voiceNote);
+                 					        fos.write(audioData);
+                 					        fos.flush();
+                 					        fos.close();
+                 					    } catch (FileNotFoundException e1) {
+                 					    	e1.printStackTrace();
+                 					    } catch (IOException e1) {
+                 					    	e1.printStackTrace();
+                 					    }
+                 					    
+                 					    ArrayList<String> paths = group.getItems().get(0).getPaths();
+                 					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
+                 					    ArrayList<String> dates = group.getItems().get(0).getDates();
+                 					    //add to the front (order n...) to keep newer messages on top
+                 					    paths.add(0,voiceNote.getAbsolutePath());
+                 					    sentBools.add(0,"sent");
+                 					    
+                 					    Date dte = voiceText.getCreatedAt();
+                 					    SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss MMM d");
+                 					    String formattedDateString2 = formatter2.format(dte); 
+                 						dates.add(0, formattedDateString2);
+                 					    
+                 					    group.getItems().get(0).setDates(dates);
+                 					    group.getItems().get(0).setPaths(paths);
+                 					    group.getItems().get(0).setSentBools(sentBools);
+                 					    notifyDataSetChanged();
+                   					}
+                  				});
+                           } 
+                       }
+                     }, 1000);
                      break;
                 }
                 return false;
