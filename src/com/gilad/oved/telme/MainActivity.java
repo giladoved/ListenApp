@@ -143,6 +143,8 @@ public class MainActivity extends Activity {
 				    	        	        		  public void done(String result, ParseException e) {
 				    	        	        		    if (e == null) {
 				    	        	        		    	Toast.makeText(getApplicationContext(), "Your SMS invitation has been sent!", Toast.LENGTH_SHORT).show();
+				    	        	        		    } else {
+				    	        	        		    	showError(e.getMessage());
 				    	        	        		    }
 				    	        	        		  }
 				    	        	        		});
@@ -164,11 +166,11 @@ public class MainActivity extends Activity {
 									  if (foundPic != null) {
 										  bmp = BitmapFactory.decodeByteArray(foundPic.getData(), 0, foundPic.getData().length);
 									  } else {
-											bmp = BitmapFactory.decodeResource(context.getResources(),
-									                    R.drawable.userprofile);
+											bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.userprofile);
 									  }
 			            	     	  friendPictures.add(bmp);
 								  } catch (ParseException e1) {
+									  showError(e1.getMessage());
 							   		  Log.d(TAG, "exception trying to get the new user's image: " + e1);
 								  }
 					    	      
@@ -187,6 +189,7 @@ public class MainActivity extends Activity {
 								    	out.flush();
 								    	out.close();
 								    } catch (Exception e1) {
+								    	showError(e1.getMessage());
 								   		  Log.d(TAG, "exception trying to write their picture to the disk: " + e1);
 								    }
 								    
@@ -239,6 +242,7 @@ public class MainActivity extends Activity {
 					selectedImage = BitmapFactory.decodeStream(imageStream);
 				} catch (FileNotFoundException e) {
 					e.printStackTrace(); 
+					showError(e.getMessage());
 				}
 	    	      
             	ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -273,6 +277,7 @@ public class MainActivity extends Activity {
     	mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
     	mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
     	mediaRecorder.setOutputFile(recordingOutputFile);
+    	mediaRecorder.setMaxDuration(1000 * 60 * 5);
 		try {
 			mediaRecorder.prepare();
 			mediaRecorder.start();
@@ -288,6 +293,8 @@ public class MainActivity extends Activity {
 		try {
 			mediaRecorder.stop();
 		} catch (IllegalStateException e) {
+			System.out.println("E is: ----- " + e.getLocalizedMessage());
+		} catch(RuntimeException e){
 			System.out.println("E is: ----- " + e.getLocalizedMessage());
 		}
 		mediaRecorder.reset();
@@ -313,15 +320,13 @@ public class MainActivity extends Activity {
 			ch_list = new ArrayList<Child>();
 			Child ch = new Child();
 			
-			Log.d(TAG, "counter: " + counter + "  friendNum: " + friendNumbers.get(counter) + "  groupname" + group_name);
 		    File dir = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(counter) + "," + friendNumbers.get(counter));
 		    File[] files = dir.listFiles();
 		    Arrays.sort(files, new Comparator<File>(){
 		        public int compare(File f1, File f2) {
-		            return -Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+		            return -Long.valueOf(f1.lastModified()).compareTo(f2.lastModified()); //newest first
 		        } 
 		    });
-			Log.d(TAG, counter + ")) sorted files: " + Arrays.toString(files));
 		    		    
 		    if (files != null) {
 		    	for (File f : files) {
@@ -334,6 +339,7 @@ public class MainActivity extends Activity {
 						try {
 							convertedDate = dateFormat.parse(dateStr);
 						} catch (java.text.ParseException e) {
+							showError(e.getMessage());
 							e.printStackTrace();
 						}
 						
@@ -347,8 +353,6 @@ public class MainActivity extends Activity {
 		    	}
 		    }
 		    
-		    System.out.println(counter + ") the dates are set to " + dates);
-		    Log.d(TAG, counter + ") the dates are set to " + dates);
 			ch.setDates(dates);
 			ch.setSentBools(sentBools);
 			ch.setPaths(paths);
@@ -360,5 +364,19 @@ public class MainActivity extends Activity {
 		}
 
 		return list;
+	}
+	
+	public void showError(String message) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage(message)
+			   .setTitle("Error!")
+		       .setCancelable(false)
+		       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+		           public void onClick(DialogInterface dialog, int id) {
+		        	   //do nothing
+		           }
+		       });
+		AlertDialog alert = builder.create();
+		alert.show();
 	}
 }

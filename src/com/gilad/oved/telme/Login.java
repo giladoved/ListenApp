@@ -32,31 +32,14 @@ public class Login extends Activity implements OnClickListener {
 		setContentView(R.layout.activity_login);
  
 		nextBtn = (Button) findViewById(R.id.nextNumberBtn);
+		nextBtn.setOnClickListener(this);
+
 		phoneNumberTxt = (EditText) findViewById(R.id.phoneNumberTxt);
 		
-		handler = new Handler(new Handler.Callback() {
-		    @Override
-		    public boolean handleMessage(Message msg) {
-		        switch (msg.what) {
-		            case 1:
-		        		Intent intent = new Intent(Login.this, MainActivity.class);
-		        		Login.this.startActivity(intent);
-		            default:
-		                break;
-		        }
-		        return false;
-		    }
-		});
-		
-		nextBtn.setOnClickListener(this);
-	}
-
-	//wait for window to appear before calling a new one to open
-	//need to improve this so
-	public void onPostResume() {
-		super.onPostResume();
 		if (ParseUser.getCurrentUser() != null) {
-			handler.sendEmptyMessageDelayed(1, 1000);
+    		Intent intent = new Intent(Login.this, MainActivity.class);
+    		Login.this.startActivity(intent);
+    		finish();
 		}
 	}
 

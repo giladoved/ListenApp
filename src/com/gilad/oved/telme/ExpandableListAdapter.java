@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +18,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.util.Base64;
 import android.util.Log;
@@ -54,13 +54,14 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     private Context context;
     private ArrayList<Group> groups;
     
-	boolean firstTouch = true; //to check if button is being held or not
 	ListView historyList;
 		
     ArrayList<String> friendNicknames;
     ArrayList<String> friendNumbers;
     ArrayList<Bitmap> friendPictures;
-
+    
+    boolean isRecording = false;
+    
     public ExpandableListAdapter(Context context, ArrayList<Group> groups, ArrayList<String> nicknames, ArrayList<String> numbers, ArrayList<Bitmap> pictures, ExpandableListView listView) {
         this.context = context;
         this.groups = groups;
@@ -229,16 +230,20 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                // TODO Auto-generated method stub
+            	CountDownTimer timeCounter;
                 switch(event.getAction()){
                  case MotionEvent.ACTION_DOWN:
                      Log.d(TAG, "Start Recording");
-                     MainActivity.startRecording();
-					 messageBtn.setImageResource(R.drawable.recordpressed);
+					if (!isRecording) {
+						MainActivity.startRecording();
+						isRecording = true;
+						messageBtn.setImageResource(R.drawable.recordpressed);
+					}
                      break;
                  case MotionEvent.ACTION_UP:
                      Log.d(TAG, "Stop Recording");
                      MainActivity.stopRecording();
+                     isRecording = false;
 					 messageBtn.setImageResource(R.drawable.record);
      				
      				 File audioFile = new File(MainActivity.recordingOutputFile);
@@ -287,9 +292,6 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
      					    	e1.printStackTrace();
      					    }
      					    
-     					    Log.d(TAG, "before group items: " + group.getItems());
-     					    Log.d(TAG, "before group items: " + group.getItems().get(0).getDates());
-     					    
      					    ArrayList<String> paths = group.getItems().get(0).getPaths();
      					    ArrayList<String> sentBools = group.getItems().get(0).getSentBools();
      					    ArrayList<String> dates = group.getItems().get(0).getDates();
@@ -301,9 +303,6 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
      					    SimpleDateFormat formatter2 = new SimpleDateFormat("HH:mm:ss MMM d");
      					    String formattedDateString2 = formatter2.format(dte); 
      						dates.add(0, formattedDateString2);
-     					    
-     						Log.d(TAG, "after group items: " + group.getItems());
-     						Log.d(TAG, "after group items: " + group.getItems().get(0).getDates());
      					    
      					    group.getItems().get(0).setDates(dates);
      					    group.getItems().get(0).setPaths(paths);
