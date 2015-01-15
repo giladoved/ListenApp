@@ -47,8 +47,10 @@ public class Login extends Activity implements OnClickListener {
 			File userFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/");
 			if (userFile != null) {
 				String[] children = userFile.list();
-				for (int i = 0; i < children.length; i++) {
-					new File(userFile, children[i]).delete();
+				if (children != null) {
+					for (int i = 0; i < children.length; i++) {
+						new File(userFile, children[i]).delete();
+					}
 				}
 				userFile.delete();
 			}
