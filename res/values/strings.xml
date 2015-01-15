@@ -6,5 +6,7 @@
     <string name="action_settings">TelMe</string>
     <string name="title_activity_register">Register</string>
     <string name="title_activity_main">TelMe</string>
+    <string name="title_activity_history_detail">HistoryDetail</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>

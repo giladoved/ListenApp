@@ -18,34 +18,38 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
-    
-<!--
+
+    <!--
   IMPORTANT: Change "com.parse.tutorials.pushnotifications.permission.C2D_MESSAGE" in the lines below
   to match your app's package name + ".permission.C2D_MESSAGE".
--->
-<permission android:protectionLevel="signature"
-    android:name="com.gilad.oved.telme.permission.C2D_MESSAGE" />
-<uses-permission android:name="com.gilad.oved.telme.permission.C2D_MESSAGE" />
+    -->
+    <permission
+        android:name="com.gilad.oved.telme.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="com.gilad.oved.telme.permission.C2D_MESSAGE" />
+
     <application
-        android:name="com.gilad.oved.telme.MainApp"
+        android:name=".MainApp"
         android:allowBackup="true"
         android:icon="@drawable/icon"
         android:label="ListenApp" >
         <activity
-            android:name="com.gilad.oved.telme.Login"
+            android:name=".Login"
             android:label="ListenApp" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name="com.gilad.oved.telme.MainActivity"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
-            android:label="ListenApp" >
+            android:name=".MainActivity"
+            android:label="ListenApp"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" >
         </activity>
         <activity
-            android:name="com.gilad.oved.telme.Register"
+            android:name=".Register"
             android:label="ListenApp" >
         </activity>
 
@@ -64,13 +68,12 @@
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
 
-<!--       IMPORTANT: Change "com.parse.tutorials.pushnotifications" to match your app's package name. -->
+                <!-- IMPORTANT: Change "com.parse.tutorials.pushnotifications" to match your app's package name. -->
                 <category android:name="com.gilad.oved.telme" />
             </intent-filter>
         </receiver>
-        
         <receiver
-            android:name="com.gilad.oved.telme.CustomRec"
+            android:name=".CustomRec"
             android:exported="false" >
             <intent-filter>
                 <action android:name="com.parse.push.intent.RECEIVE" />
@@ -78,13 +81,27 @@
                 <action android:name="com.parse.push.intent.OPEN" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".CustomReceiver"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.gilad.oved.holdandtalk.PLAY_MESSAGE" />
+            </intent-filter>
+        </receiver>
 
-        <receiver android:name="com.gilad.oved.telme.CustomReceiver" android:exported="false">
-  			<intent-filter>
-   				<action android:name="com.gilad.oved.holdandtalk.PLAY_MESSAGE" />
- 	        </intent-filter>
-		</receiver>
-		<meta-data android:name="com.parse.push.notification_icon" android:resource="@drawable/icon"/>
+        <meta-data
+            android:name="com.parse.push.notification_icon"
+            android:resource="@drawable/icon" />
+
+        <activity
+            android:name=".HistoryDetail"
+            android:label="@string/title_activity_history_detail"
+           android:theme="@style/Theme.AppCompat"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.gilad.oved.telme.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

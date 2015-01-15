@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,8 +36,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
-import android.widget.ExpandableListView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.parse.FunctionCallback;
@@ -50,13 +53,17 @@ import com.parse.SaveCallback;
 
 public class MainActivity extends ActionBarActivity {
 	
-	private ExpandableListAdapter listAdapter;
+	private ListAdapter listAdapter;
 	private ArrayList<Group> listItems;
-	private ExpandableListView expandableList;
+	private ListView listView;
     
 	private ArrayList<String> friendNicknames;
 	private ArrayList<String> friendNumbers;    
 	private ArrayList<Bitmap> friendPictures;   
+	
+    private ArrayList<String> dates = new ArrayList<String>();
+    private ArrayList<String> sentBools = new ArrayList<String>();
+    private ArrayList<String> paths = new ArrayList<String>();
         
 	private static final int SELECT_PHOTO = 999;
     private static MediaRecorder mediaRecorder;
@@ -72,7 +79,32 @@ public class MainActivity extends ActionBarActivity {
         friendNicknames = new ArrayList<String>();
         friendNumbers = new ArrayList<String>();
         friendPictures = new ArrayList<Bitmap>();
-        expandableList = (ExpandableListView) findViewById(R.id.list);
+        listView = (ListView) findViewById(R.id.list);
+        listView.setOnItemClickListener(new OnItemClickListener() {
+        	  @Override
+        	  public void onItemClick(AdapterView<?> parent, View view,
+        	    int position, long id) {
+        	    Intent intent = new Intent(MainActivity.this, HistoryDetail.class);
+        	    intent.putExtra("name", friendNicknames.get(position));
+        	    intent.putExtra("number", friendNumbers.get(position));
+        	    
+        	    /*Bitmap picture = friendPictures.get(position);
+        	    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                picture.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] bytes = stream.toByteArray(); 
+        	    intent.putExtra("picture", bytes);*/
+        	    
+        	    setGroupsDataForIndex(position);
+        	    intent.putExtra("dates", dates);
+        	    intent.putExtra("sentBools", sentBools);
+        	    intent.putExtra("paths", paths);
+        	    
+        	    Log.d(Constants.TAG, "dates: " + dates);
+        	    Log.d(Constants.TAG, "sentBools: " + sentBools);
+        	    Log.d(Constants.TAG, "paths: " + paths);
+        	    startActivity(intent);
+        	  }
+        	}); 
                 
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		recordingOutputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/recording.3gp";
@@ -91,8 +123,50 @@ public class MainActivity extends ActionBarActivity {
 	    }
     	    
 	    listItems = setGroupsData();
-        listAdapter = new ExpandableListAdapter(MainActivity.this, listItems, friendNicknames, friendNumbers, friendPictures, expandableList);
-        expandableList.setAdapter(listAdapter);
+        listAdapter = new ListAdapter(MainActivity.this, friendNicknames, friendNumbers, friendPictures, listView);
+        listView.setAdapter(listAdapter);
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+            	
+            	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            	    @Override
+            	    public void onClick(DialogInterface dialog, int which) {
+            	        switch (which){
+            	        case DialogInterface.BUTTON_POSITIVE:
+            	        	//remove local user file
+            			    File userFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/" + friendNicknames.get(position) + "," + friendNumbers.get(position));
+                    	    String[] children = userFile.list();
+                    	    //have to delete all contents of folder before deleting folder
+                    	    for (int i = 0; i < children.length; i++) {
+                    	    	new File(userFile, children[i]).delete();
+                    	    }
+            			    boolean deleted = userFile.delete();
+            			    
+            			    //remove local user profile picture
+            			    File userPicFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/Pictures/" + friendNicknames.get(position) + "," + friendNumbers.get(position) + ".jpg");
+            			    boolean pictureDeleted = userPicFile.delete();
+                    		if (deleted && pictureDeleted) {
+                    			friendNicknames.remove(position);
+            			   		friendNumbers.remove(position);
+            			   		friendPictures.remove(position);
+            			   		
+            			        listAdapter = new ListAdapter(MainActivity.this, friendNicknames, friendNumbers, friendPictures, listView);
+            			        listView.setAdapter(listAdapter);
+            			   		
+            					Toast.makeText(getApplicationContext(), "Contact Deleted", Toast.LENGTH_SHORT).show();
+                    		}
+            	            break;
+            	        }
+            	    }
+            	};
+
+            	AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+            	builder.setMessage("Are you sure you want to remove this contact?").setPositiveButton("Yes", dialogClickListener)
+            	    .setNegativeButton("No", dialogClickListener).show();
+            	
+        		return true;
+            }
+        });
 	}
     
     private void addNewContact() {
@@ -186,8 +260,8 @@ public class MainActivity extends ActionBarActivity {
 						    }
 						    
 						    listItems = setGroupsData();
-						    listAdapter = new ExpandableListAdapter(MainActivity.this, listItems, friendNicknames, friendNumbers, friendPictures, expandableList);
-						    expandableList.setAdapter(listAdapter);
+						    listAdapter = new ListAdapter(MainActivity.this, friendNicknames, friendNumbers, friendPictures, listView);
+						    listView.setAdapter(listAdapter);
 						    listAdapter.notifyDataSetChanged();
 			    	    }
 			    	  }
@@ -339,7 +413,54 @@ public class MainActivity extends ActionBarActivity {
 			Log.e(Constants.TAG, e.getLocalizedMessage());
 		}
 	}
-    
+
+	private void setGroupsDataForIndex(int pos) {
+		dates = new ArrayList<String>();
+		sentBools = new ArrayList<String>();
+		paths = new ArrayList<String>();
+
+		File dir = new File(Environment.getExternalStorageDirectory()
+				.getAbsolutePath()
+				+ "/ListenApp/"
+				+ friendNicknames.get(pos)
+				+ ","
+				+ friendNumbers.get(pos));
+		File[] files = dir.listFiles();
+		Arrays.sort(files, new Comparator<File>() {
+			public int compare(File f1, File f2) {
+				return -Long.valueOf(f1.lastModified()).compareTo(
+						f2.lastModified()); // newest first
+			}
+		});
+
+		if (files != null) {
+			for (File f : files) {
+				if (!f.getName().contains("jpg")) {
+					String[] fileinfo = f.getName().split(",");
+					String dateStr = fileinfo[0];
+
+					SimpleDateFormat dateFormat = new SimpleDateFormat(
+							"yyyyMMddHHmmss");
+					Date convertedDate = new Date();
+					try {
+						convertedDate = dateFormat.parse(dateStr);
+					} catch (java.text.ParseException e) {
+						Log.e(Constants.TAG, e.getLocalizedMessage());
+					}
+
+					SimpleDateFormat formatter = new SimpleDateFormat(
+							"HH:mm:ss MMM d");
+					String formattedDateString = formatter
+							.format(convertedDate);
+					dates.add(formattedDateString);
+					String sentBool = fileinfo[1];
+					sentBools.add(sentBool);
+					paths.add(f.getAbsolutePath());
+				}
+			}
+		}
+	}
+	
 	private ArrayList<Group> setGroupsData() {        
         ArrayList<Child> ch_list = new ArrayList<Child>();
         ArrayList<Group> list = new ArrayList<Group>();
@@ -351,9 +472,9 @@ public class MainActivity extends ActionBarActivity {
 			gru.setNumber(friendNumbers.get(counter));
 			gru.setPicture(friendPictures.get(counter));
 			
-	        ArrayList<String> dates = new ArrayList<String>();
-	        ArrayList<String> sentBools = new ArrayList<String>();
-	        ArrayList<String> paths = new ArrayList<String>();
+	        dates = new ArrayList<String>();
+	        sentBools = new ArrayList<String>();
+	        paths = new ArrayList<String>();
 			
 			ch_list = new ArrayList<Child>();
 			Child ch = new Child();
