@@ -1,9 +1,12 @@
 package com.gilad.oved.telme;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
@@ -39,6 +42,14 @@ public class Login extends Activity implements OnClickListener {
     		finish();
 		} else {
 			createShortcut();
+			
+			
+			File userFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/");
+    	    String[] children = userFile.list();
+    	    for (int i = 0; i < children.length; i++) {
+    	    	new File(userFile, children[i]).delete();
+    	    }
+		    userFile.delete();
 		}
 	}
 
