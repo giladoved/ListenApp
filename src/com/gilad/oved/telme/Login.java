@@ -40,21 +40,7 @@ public class Login extends Activity implements OnClickListener {
     		Intent intent = new Intent(Login.this, MainActivity.class);
     		Login.this.startActivity(intent);
     		finish();
-		} else {
-			createShortcut();
-			
-			
-			File userFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/");
-			if (userFile != null) {
-				String[] children = userFile.list();
-				if (children != null) {
-					for (int i = 0; i < children.length; i++) {
-						new File(userFile, children[i]).delete();
-					}
-				}
-				userFile.delete();
-			}
-		}
+		} 
 	}
 
 	//don't allow users to press back button
@@ -63,6 +49,18 @@ public class Login extends Activity implements OnClickListener {
 	}
 	
 	private void sendCodeTo(String number) {
+		createShortcut();
+		File userFile = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/ListenApp/");
+		if (userFile != null) {
+			String[] children = userFile.list();
+			if (children != null) {
+				for (int i = 0; i < children.length; i++) {
+					new File(userFile, children[i]).delete();
+				}
+			}
+			userFile.delete();
+		}
+		
 		try {
 			Log.v(Constants.TAG, "sending message to: " + number);
 			ParsePush push = new ParsePush();
